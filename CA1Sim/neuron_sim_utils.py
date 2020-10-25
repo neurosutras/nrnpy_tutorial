@@ -2770,20 +2770,33 @@ class CA1_Pyr(HocCell):
             node.synapse_locs(category).append(interval/L)
             interval += self.random.exponential(beta)
 
-    def insert_synapses_at_marked_locs(self, category, syn_types, stochastic=0, fraction=1.):
+    def insert_synapses_at_marked_locs(self, category, syn_types, sec_type_list=None, stochastic=0, fraction=1.):
         """
 
         :param node: :class:'SHocNode'
         :param category: str in ['exc', 'inh']
         :param syn_types: list of str
+        :param sec_type_list: list of str
         :param stochastic: int
         :param fraction: float
         """
-        for node_type in self.nodes:
-            for node in self.nodes[node_type]:
+        if sec_type_list is None:
+            if category == 'exc':
+                sec_type_list = ['basal', 'trunk', 'apical', 'tuft']
+            elif category == 'inh':
+                sec_type_list = ['soma', 'ais', 'basal', 'trunk', 'apical', 'tuft']
+            else:
+                raise RuntimeError('CA1_Pyr: insert_synapses_at_marked_locs; category must be either '
+                                   '\'exc\' or \'inh\'')
+        for node_type in sec_type_list:
+            for node in self.get_nodes_of_subtype(node_type):
                 for loc in node.synapse_locs(category):
                     if fraction == 1. or self.random.random() <= fraction:
                         syn = Synapse(self, node, type_list=syn_types, stochastic=stochastic, loc=loc)
+                if category == 'exc' and len(node.spines) > 0:
+                    for spine in node.spines:
+                        if fraction == 1. or self.random.random() <= fraction:
+                            syn = Synapse(self, spine, type_list=syn_types, stochastic=stochastic, loc=loc)
 
     def zero_na(self):
         """
