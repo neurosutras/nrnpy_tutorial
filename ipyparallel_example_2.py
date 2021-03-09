@@ -49,6 +49,7 @@ def main(a, verbose):
 
     if verbose:
         print('process: %i; value of a: %i' % (os.getpid(), context.a))
+        print('ajay was here')
 
     # requires that $N number of remote workers first be instantiated from the command line with
     # ipcluster start -n $N
