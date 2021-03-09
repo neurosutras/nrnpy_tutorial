@@ -40,6 +40,8 @@ def modify_a(a):
     raise Exception('Batman broke everything here.')
     context.a = a
 
+#changes
+print('garbage')
 
 @click.command()
 @click.option("--a", type=int, default=10)
