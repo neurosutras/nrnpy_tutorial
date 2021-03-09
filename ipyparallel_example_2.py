@@ -36,9 +36,9 @@ def report_a():
         return context.a
 
 
-def modify_a(b):
-    raise Exception('Alessandro broke everything here.')
-    context.a = b
+def modify_a(a):
+    raise Exception('Ajay broke everything here.')
+    context.a = a
 
 #changes
 print('garbage')
