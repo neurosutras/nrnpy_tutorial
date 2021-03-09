@@ -37,11 +37,8 @@ def report_a():
 
 
 def modify_a(a):
-    raise Exception('you broke nothing here.')
     context.a = a
 
-#changes
-print('garbage')
 
 @click.command()
 @click.option("--a", type=int, default=10)
