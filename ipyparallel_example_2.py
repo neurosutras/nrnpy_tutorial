@@ -37,7 +37,7 @@ def report_a():
 
 
 def modify_a(a):
-    raise Exception('you broke everything here.')
+    raise Exception('you broke nothing here.')
     context.a = a
 
 #changes
