@@ -39,6 +39,7 @@ def report_a():
 def modify_a(a):
     context.a = a
 
+#changes
 print('garbage')
 
 @click.command()
