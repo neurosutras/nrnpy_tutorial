@@ -1,6 +1,6 @@
 import click
 import os
-from ipyparallel import Client
+from mpi4py import MPI
 
 
 class Context(object):
@@ -33,16 +33,16 @@ context = Context()
 @click.option("--a", type=int, default=10)
 @click.option("--verbose", is_flag=True)
 def main(a, verbose):
-
     context().update(locals())
 
+    # execute on $N number of processes from the command line with:
+    # mpirun -n $N python mpi4py_example_1.py
+
+    context.comm = MPI.COMM_WORLD
+
     if verbose:
-        print('process: %i; value of a: %i' % (os.getpid(), context.a))
-
-    # requires that $N number of remote workers first be instantiated from the command line with
-    # ipcluster start -n $N
-
-    context.client = Client()
+        print('process: %i; MPI rank/size: %i/%i; value of a: %i' %
+              (os.getpid(), context.comm.rank, context.comm.size, context.a))
 
 
 if __name__ == '__main__':

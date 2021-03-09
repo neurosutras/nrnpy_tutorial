@@ -44,9 +44,15 @@ def modify_a(a):
 @click.option("--a", type=int, default=10)
 @click.option("--verbose", is_flag=True)
 def main(a, verbose):
+
     context().update(locals())
+
     if verbose:
         print('process: %i; value of a: %i' % (os.getpid(), context.a))
+
+    # requires that $N number of remote workers first be instantiated from the command line with
+    # ipcluster start -n $N
+
     context.client = Client()
 
 

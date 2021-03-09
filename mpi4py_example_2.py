@@ -1,6 +1,6 @@
 import click
 import os
-from ipyparallel import Client
+from mpi4py import MPI
 
 
 class Context(object):
@@ -29,20 +29,40 @@ class Context(object):
 context = Context()
 
 
+def report_a():
+    if 'a' not in context():
+        return None
+    else:
+        return context.a
+
+
+def modify_a(a):
+    context.a = a
+
+
 @click.command()
 @click.option("--a", type=int, default=10)
 @click.option("--verbose", is_flag=True)
 def main(a, verbose):
-
     context().update(locals())
 
+    # execute on $N number of processes from the command line with:
+    # mpirun -n $N python mpi4py_example_2.py
+
+    context.comm = MPI.COMM_WORLD
+
     if verbose:
-        print('process: %i; value of a: %i' % (os.getpid(), context.a))
+        print('process: %i; MPI rank/size: %i/%i; value of a: %i' %
+              (os.getpid(), context.comm.rank, context.comm.size, context.a))
 
-    # requires that $N number of remote workers first be instantiated from the command line with
-    # ipcluster start -n $N
+    result = report_a()
+    if verbose:
+        print('Before calling modify_a, calling report_a on rank %i returns:\n%s' % (context.comm.rank, str(result)))
 
-    context.client = Client()
+    modify_a(context.a * 2)
+    result = report_a()
+    if verbose:
+        print('After calling modify_a, calling report_a on rank %i returns:\n%s' % (context.comm.rank, str(result)))
 
 
 if __name__ == '__main__':
