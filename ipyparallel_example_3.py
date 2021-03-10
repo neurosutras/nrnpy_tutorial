@@ -75,7 +75,7 @@ def main(a, verbose):
     result.get()
     result = context.client[:].apply(report_a)
     if verbose:
-        print('After calling modify_a with a map opertaion, calling report_a on all workers returns:\n%s' %
+        print('After calling modify_a with a map operation, calling report_a on all workers returns:\n%s' %
               str(result.get()))
 
     # syntax for requesting the value of a variable defined in the local namespace on each remote worker
