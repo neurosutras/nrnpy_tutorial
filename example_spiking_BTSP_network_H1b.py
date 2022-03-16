@@ -43,8 +43,6 @@ soma_v_spike_th = 0.3
 dend_soma_coupling = 0.05
 inh_learning_rate = 0.4
 inh_soma_v_spike_th = 0.1
-inh_soma_v_act_rate = 20.
-inh_soma_v_decay_tau = 0.1
 
 for i, loc in enumerate(input_locs):
     indexes = np.where((network.t >= loc + teaching_window) & (network.t < loc + teaching_window + teaching_input_dur))
@@ -64,15 +62,13 @@ network.init_input_layer(input_layer, patterns=input_pattern)
 hidden1 = HiddenDendLayer(network, hidden_dim, dend_v_ca_spike_th=dend_v_ca_spike_th,
                           dend_soma_coupling=dend_soma_coupling, soma_v_spike_th=soma_v_spike_th)
 network.append_hidden_layer(hidden1)
-inh1 = SomaLayer(network, inh_dim, label='Inh1', soma_v_spike_th=inh_soma_v_spike_th,
-                 soma_v_act_rate=inh_soma_v_act_rate, soma_v_decay_tau=inh_soma_v_decay_tau)
+inh1 = SomaLayer(network, inh_dim, label='Inh1', soma_v_spike_th=inh_soma_v_spike_th)
 network.append_hidden_layer(inh1)
 output_layer = OutputDendLayer(network, output_dim, dend_v_ca_spike_th=dend_v_ca_spike_th,
                                target_eligibility=target_eligibility, soma_v_spike_th=soma_v_spike_th,
                                dend_soma_coupling=dend_soma_coupling)
 network.init_output_layer(output_layer, teaching_input)
-inh_out = SomaLayer(network, inh_dim, label='Inh_Out', soma_v_spike_th=inh_soma_v_spike_th,
-                    soma_v_act_rate=inh_soma_v_act_rate, soma_v_decay_tau=inh_soma_v_decay_tau)
+inh_out = SomaLayer(network, inh_dim, label='Inh_Out', soma_v_spike_th=inh_soma_v_spike_th)
 network.append_hidden_layer(inh_out)
 
 BTSP_rule = BTSPLearningRule()
@@ -92,10 +88,10 @@ network.output_layer.connect('Inh_Out', 'dend', DendInhHomeo_rule)
 
 local_random = np.random.default_rng(seed=0)
 network.layers['Hidden1'].weights['Input'] = local_random.uniform(0., 0.2, (hidden_dim, input_dim))
-network.layers['Hidden1'].weights['Output'] = local_random.normal(1.0, 0.2, (hidden_dim, output_dim))
-network.layers['Hidden1'].weights['Inh1'] = np.ones((hidden_dim, inh_dim)) * -3.
-network.layers['Inh1'].weights['Input'] = np.ones((inh_dim, hidden_dim)) * 0.1
-network.layers['Inh1'].weights['Hidden1'] = np.ones((inh_dim, hidden_dim)) * 0.1
+network.layers['Hidden1'].weights['Output'] = local_random.uniform(0.0, 0.8, (hidden_dim, output_dim))
+network.layers['Hidden1'].weights['Inh1'] = np.ones((hidden_dim, inh_dim)) * -2.
+network.layers['Inh1'].weights['Input'] = np.ones((inh_dim, hidden_dim)) * 0.15
+network.layers['Inh1'].weights['Hidden1'] = np.ones((inh_dim, hidden_dim)) * 0.35
 network.layers['Inh_Out'].weights['Output'] = np.ones((inh_dim, output_dim)) * 1.
 network.layers['Output'].weights['Inh_Out'] = np.ones((hidden_dim, inh_dim)) * -3.
 network.output_layer.weights['Hidden1'] = local_random.uniform(0., 0.2, (output_dim, hidden_dim))
