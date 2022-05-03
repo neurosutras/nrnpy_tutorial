@@ -22,3 +22,17 @@
   I_I_hidden_weight_scale: 4.491201E+00
   I_I_learning_rate: 1.183506E-01
   I_I_output_weight_scale: 5.305925E-01
+# 21 -> 7 -> 21
+2:
+  E_E_hidden_weight_scale: 9.619893E+00
+  E_E_learning_rate: 9.894513E-02
+  E_E_output_weight_scale: 5.092394E+00
+  E_I_hidden_weight_scale: 9.436727E-01
+  E_I_learning_rate: 5.916187E-02
+  E_I_output_weight_scale: 7.892704E+00
+  I_E_hidden_weight_scale: 1.738441E+00
+  I_E_learning_rate: 1.937938E-01
+  I_E_output_weight_scale: 9.282008E+00
+  I_I_hidden_weight_scale: 8.125238E+00
+  I_I_learning_rate: 1.111604E-02
+  I_I_output_weight_scale: 5.291953E-01
