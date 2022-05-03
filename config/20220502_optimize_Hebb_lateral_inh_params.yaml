@@ -1,4 +1,4 @@
-# 7 -> 21
+# 7 -> 21[7] (100 blocks)
 0:
   E_E_learning_rate: 4.392767E-01
   E_E_weight_scale: 2.820508E+00
@@ -8,7 +8,7 @@
   I_E_weight_scale: 9.937887E+00
   I_I_learning_rate: 3.259708E-02
   I_I_weight_scale: 5.002013E-01
-# 7 -> 7 -> 21
+# 7 -> 7[7] -> 21[7] (100 blocks)
 1:
   E_E_hidden_weight_scale: 8.976260E+00
   E_E_learning_rate: 3.052508E-01
@@ -22,7 +22,7 @@
   I_I_hidden_weight_scale: 4.491201E+00
   I_I_learning_rate: 1.183506E-01
   I_I_output_weight_scale: 5.305925E-01
-# 21 -> 7 -> 21
+# 21 -> 7[7] -> 21[7] (200 blocks)
 2:
   E_E_hidden_weight_scale: 9.619893E+00
   E_E_learning_rate: 9.894513E-02
@@ -36,3 +36,41 @@
   I_I_hidden_weight_scale: 8.125238E+00
   I_I_learning_rate: 1.111604E-02
   I_I_output_weight_scale: 5.291953E-01
+# 21 -> 7[7] -> 21[7] (400 blocks)
+3:
+  E_E_hidden_weight_scale: 5.617324E+00
+  E_E_learning_rate: 9.964436E-02
+  E_E_output_weight_scale: 7.334502E+00
+  E_I_hidden_weight_scale: 6.633882E-01
+  E_I_learning_rate: 2.869237E-02
+  E_I_output_weight_scale: 9.833592E+00
+  I_E_hidden_weight_scale: 1.060403E+00
+  I_E_learning_rate: 2.820072E-01
+  I_E_output_weight_scale: 8.659571E+00
+  I_I_hidden_weight_scale: 6.954542E+00
+  I_I_learning_rate: 4.610254E-02
+  I_I_output_weight_scale: 5.057952E-01
+# 21 -> 7[1] -> 21[7] (200 blocks)
+B:
+  E_E_hidden_weight_scale: 9.619893E+00
+  E_E_learning_rate: 9.894513E-02
+  E_E_output_weight_scale: 5.092394E+00
+  E_I_hidden_weight_scale: 9.436727E-01
+  E_I_learning_rate: 5.916187E-02
+  E_I_output_weight_scale: 7.892704E+00
+  I_E_hidden_weight_scale: 1.738441E+00
+  I_E_learning_rate: 1.937938E-01
+  I_E_output_weight_scale: 9.282008E+00
+  I_I_hidden_weight_scale: 0.
+  I_I_learning_rate: 1.111604E-02
+  I_I_output_weight_scale: 5.291953E-01
+# 7 -> 21[1] (200 blocks)
+A:
+  E_E_learning_rate: 4.392767E-01
+  E_E_weight_scale: 2.820508E+00
+  E_I_learning_rate: 3.851672E-01
+  E_I_weight_scale: 4.473693E+00
+  I_E_learning_rate: 4.089656E-02
+  I_E_weight_scale: 9.937887E+00
+  I_I_learning_rate: 3.259708E-02
+  I_I_weight_scale: 0.

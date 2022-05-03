@@ -8,9 +8,9 @@ def config_worker():
 
     ReLU = lambda x: np.maximum(0., x)
 
-    input_dim = 21
+    input_dim = 7
     if 'num_hidden_layers' not in context():
-        num_hidden_layers = 1
+        num_hidden_layers = 0
     else:
         num_hidden_layers = int(context.num_hidden_layers)
     hidden_dim = 7
@@ -19,20 +19,23 @@ def config_worker():
     else:
         hidden_inh_dim = int(context.hidden_inh_dim)
     output_dim = 21
-    output_inh_dim = 7
+    if 'output_inh_dim' not in context():
+        output_inh_dim = 7
+    else:
+        output_inh_dim = int(context.output_inh_dim)
     tau = 3
     num_steps = 12
     seed = 0
     disp = True
     shuffle = True
-    n_hot = 1
+    n_hot = 2
     I_floor_weight = -0.05
     if 'anti_Hebb_I' not in context():
         anti_Hebb_I = True
     if 'plot' not in context():
         plot = False
     if 'num_blocks' not in context():
-        num_blocks = 400  # each block contains all input patterns
+        num_blocks = 100  # each block contains all input patterns
     else:
         num_blocks = int(context.num_blocks)
 
@@ -94,14 +97,10 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, anti_Hebb_I, shuffle, 
     E_I_learning_rate = x_dict['E_I_learning_rate']
     I_E_learning_rate = x_dict['I_E_learning_rate']
     I_I_learning_rate = x_dict['I_I_learning_rate']
-    E_E_output_weight_scale = x_dict['E_E_output_weight_scale']
-    E_I_output_weight_scale = x_dict['E_I_output_weight_scale']
-    I_E_output_weight_scale = x_dict['I_E_output_weight_scale']
-    I_I_output_weight_scale = x_dict['I_I_output_weight_scale']
-    E_E_hidden_weight_scale = x_dict['E_E_hidden_weight_scale']
-    E_I_hidden_weight_scale = x_dict['E_I_hidden_weight_scale']
-    I_E_hidden_weight_scale = x_dict['I_E_hidden_weight_scale']
-    I_I_hidden_weight_scale = x_dict['I_I_hidden_weight_scale']
+    E_E_weight_scale = x_dict['E_E_weight_scale']
+    E_I_weight_scale = x_dict['E_I_weight_scale']
+    I_E_weight_scale = x_dict['I_E_weight_scale']
+    I_I_weight_scale = x_dict['I_I_weight_scale']
 
     E_E_weight_scale_dict = {}
     E_I_weight_scale_dict = {}
@@ -109,18 +108,11 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, anti_Hebb_I, shuffle, 
     I_I_weight_scale_dict = {}
 
     for layer in range(1, network.num_layers):
-        if layer == network.num_layers - 1:
-            E_E_weight_scale_dict[layer] = E_E_output_weight_scale
-            if network.inh_layer_dims[layer] > 0:
-                E_I_weight_scale_dict[layer] = E_I_output_weight_scale
-                I_E_weight_scale_dict[layer] = I_E_output_weight_scale
-                I_I_weight_scale_dict[layer] = I_I_output_weight_scale
-        else:
-            E_E_weight_scale_dict[layer] = E_E_hidden_weight_scale
-            if network.inh_layer_dims[layer] > 0:
-                E_I_weight_scale_dict[layer] = E_I_hidden_weight_scale
-                I_E_weight_scale_dict[layer] = I_E_hidden_weight_scale
-                I_I_weight_scale_dict[layer] = I_I_hidden_weight_scale
+        E_E_weight_scale_dict[layer] = E_E_weight_scale
+        if network.inh_layer_dims[layer] > 0:
+            E_I_weight_scale_dict[layer] = E_I_weight_scale
+            I_E_weight_scale_dict[layer] = I_E_weight_scale
+            I_I_weight_scale_dict[layer] = I_I_weight_scale
 
     network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict)
 
