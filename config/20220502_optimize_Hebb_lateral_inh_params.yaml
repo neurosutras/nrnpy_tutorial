@@ -1,0 +1,24 @@
+# 7 -> 21
+0:
+  E_E_learning_rate: 4.392767E-01
+  E_E_weight_scale: 2.820508E+00
+  E_I_learning_rate: 3.851672E-01
+  E_I_weight_scale: 4.473693E+00
+  I_E_learning_rate: 4.089656E-02
+  I_E_weight_scale: 9.937887E+00
+  I_I_learning_rate: 3.259708E-02
+  I_I_weight_scale: 5.002013E-01
+# 7 -> 7 -> 21
+1:
+  E_E_hidden_weight_scale: 8.976260E+00
+  E_E_learning_rate: 3.052508E-01
+  E_E_output_weight_scale: 2.036501E+00
+  E_I_hidden_weight_scale: 2.655694E+00
+  E_I_learning_rate: 9.950903E-02
+  E_I_output_weight_scale: 8.240789E+00
+  I_E_hidden_weight_scale: 8.970787E+00
+  I_E_learning_rate: 9.549967E-02
+  I_E_output_weight_scale: 9.364660E+00
+  I_I_hidden_weight_scale: 4.491201E+00
+  I_I_learning_rate: 1.183506E-01
+  I_I_output_weight_scale: 5.305925E-01

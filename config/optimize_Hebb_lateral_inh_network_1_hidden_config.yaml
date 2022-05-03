@@ -1,0 +1,63 @@
+bounds:
+  E_E_learning_rate:
+    - 0.0001
+    - 0.5
+  E_I_learning_rate:
+    - 0.0001
+    - 0.5
+  I_E_learning_rate:
+    - 0.0001
+    - 0.5
+  I_I_learning_rate:
+    - 0.0001
+    - 0.5
+  E_E_output_weight_scale:
+    - 0.5
+    - 10.
+  E_I_output_weight_scale:
+    - 0.5
+    - 10.
+  I_E_output_weight_scale:
+    - 0.5
+    - 10.
+  I_I_output_weight_scale:
+    - 0.5
+    - 10.
+  E_E_hidden_weight_scale:
+    - 0.5
+    - 10.
+  E_I_hidden_weight_scale:
+    - 0.5
+    - 10.
+  I_E_hidden_weight_scale:
+    - 0.5
+    - 10.
+  I_I_hidden_weight_scale:
+    - 0.5
+    - 10.
+kwargs:
+  anti_Hebb_I: False
+feature_names:
+- MSE_loss
+get_features_stages:
+- source: nested_optimize_Hebb_lateral_inh_network_1_hidden
+  compute_features: compute_features
+get_objectives:
+  nested_optimize_Hebb_lateral_inh_network_1_hidden: get_objectives
+objective_names:
+- MSE_loss
+optimization_title: Hebb_lateral_inh_network
+param_gen: PopulationAnnealing
+x0:
+  E_E_learning_rate: 0.05
+  E_I_learning_rate: 0.05
+  I_E_learning_rate: 0.05
+  I_I_learning_rate: 0.05
+  E_E_output_weight_scale: 5.
+  E_I_output_weight_scale: 2.
+  I_E_output_weight_scale: 5.
+  I_I_output_weight_scale: 5.
+  E_E_hidden_weight_scale: 5.
+  E_I_hidden_weight_scale: 2.
+  I_E_hidden_weight_scale: 5.
+  I_I_hidden_weight_scale: 5.
