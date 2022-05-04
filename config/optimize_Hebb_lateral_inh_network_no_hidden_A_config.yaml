@@ -41,11 +41,11 @@ objective_names:
 optimization_title: Hebb_lateral_inh_network_no_hidden_A
 param_gen: PopulationAnnealing
 x0:
-  E_E_learning_rate: 0.05
-  E_I_learning_rate: 0.05
-  I_E_learning_rate: 0.05
-  I_I_learning_rate: 0.05
-  E_E_weight_scale: 5.
-  E_I_weight_scale: 2.
-  I_E_weight_scale: 1.
+  E_E_learning_rate: 4.392767E-01
+  E_E_weight_scale: 2.820508E+00
+  E_I_learning_rate: 3.851672E-01
+  E_I_weight_scale: 4.473693E+00
+  I_E_learning_rate: 4.089656E-02
+  I_E_weight_scale: 9.937887E+00
+  I_I_learning_rate: 3.259708E-02
   I_I_weight_scale: 0.

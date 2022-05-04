@@ -33,11 +33,12 @@ bounds:
     - 0.5
     - 10.
   I_I_hidden_weight_scale:
-    - 0.5
+    - 0.
     - 10.
 kwargs:
   anti_Hebb_I: False
-  hidden_inh_dim: 7
+  hidden_inh_dim: 3
+  num_blocks: 1000
 feature_names:
 - MSE_loss
 get_features_stages:
@@ -47,7 +48,7 @@ get_objectives:
   nested_optimize_Hebb_lateral_inh_network_1_hidden: get_objectives
 objective_names:
 - MSE_loss
-optimization_title: Hebb_lateral_inh_network_1_hidden
+optimization_title: Hebb_lateral_inh_network_1_hidden_C
 param_gen: PopulationAnnealing
 x0:
   E_E_learning_rate: 0.05
@@ -60,5 +61,5 @@ x0:
   I_I_output_weight_scale: 5.
   E_E_hidden_weight_scale: 5.
   E_I_hidden_weight_scale: 2.
-  I_E_hidden_weight_scale: 5.
-  I_I_hidden_weight_scale: 5.
+  I_E_hidden_weight_scale: 1.
+  I_I_hidden_weight_scale: 2.
