@@ -5,49 +5,15 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from copy import deepcopy
 from nested.optimize_utils import Context
+from train_network_utils import *
 
 context = Context()
 
 
-def get_n_hot_patterns(n,length):
-    all_permutations = np.array(list(itertools.product([0., 1.], repeat=length)))
-    pattern_hotness = np.sum(all_permutations, axis=1)
-    idx = np.where(pattern_hotness == n)[0]
-    n_hot_patterns = all_permutations[idx]
-    return n_hot_patterns
-
-
-def get_Hebb_rule(learning_rate, direction=1):
-    return lambda pre, post: direction * learning_rate * np.outer(post, pre)
-
-
-def get_anti_Hebb_rule(learning_rate, direction=1):
-    return lambda pre, post: -direction * learning_rate * np.outer(post, pre)
-
-
-def get_argmax_row_indexes(data):
-    avail_row_indexes = list(range(data.shape[0]))
-    avail_col_indexes = list(range(data.shape[-1]))
-    final_row_indexes = np.empty_like(avail_col_indexes)
-    while(len(avail_col_indexes) > 0):
-        argmax_indexes = np.argmax(data[avail_row_indexes,:][:,avail_col_indexes], axis=0)
-        prev_avail_row_indexes = np.copy(avail_row_indexes)
-        prev_avail_col_indexes = np.copy(avail_col_indexes)
-        for col in range(len(argmax_indexes)):
-            col_index = prev_avail_col_indexes[col]
-            row = argmax_indexes[col]
-            row_index = prev_avail_row_indexes[row]
-            if row_index in avail_row_indexes:
-                final_row_indexes[col_index] = row_index
-                avail_row_indexes.remove(row_index)
-                avail_col_indexes.remove(col_index)
-    return final_row_indexes
-
-
 class Hebb_lat_inh_network(object):
 
-    def __init__(self, num_hidden_layers, input_dim, hidden_dim, hidden_inh_dim, output_dim, output_inh_dim,
-                 tau, num_steps, I_floor_weight=-0.05, activation_f=None, seed=None):
+    def __init__(self, num_hidden_layers, input_dim, hidden_dim, hidden_inh_dim, output_dim, output_inh_dim, tau,
+                 num_steps, activation_f=None, seed=None):
         self.num_hidden_layers = num_hidden_layers
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -60,7 +26,6 @@ class Hebb_lat_inh_network(object):
         self.seed = seed
         self.random = np.random.default_rng(seed=self.seed)
         self.num_layers = num_hidden_layers + 2
-        self.I_floor_weight = I_floor_weight
         if isinstance(self.hidden_dim, list):
             if len(self.hidden_dim) != self.num_hidden_layers:
                 raise Exception('Hebb_lat_inh_network: hidden_dim must be int or list of len num_hidden_layers')
@@ -75,11 +40,29 @@ class Hebb_lat_inh_network(object):
                 raise Exception('Hebb_lat_inh_network: hidden_inh_dim must be int or list of len num_hidden_layers')
             self.inh_layer_dims = [0] + self.num_hidden_layers * [self.hidden_inh_dim] + [self.output_inh_dim]
     
-    def init_weights(self, E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict):
+    def init_weights(self, E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
+                     E_E_weight_bounds_dict=None, E_I_weight_bounds_dict=None, I_E_weight_bounds_dict=None,
+                     I_I_weight_bounds_dict=None):
         self.E_E_weight_scale_dict = E_E_weight_scale_dict
         self.E_I_weight_scale_dict = E_I_weight_scale_dict
         self.I_E_weight_scale_dict = I_E_weight_scale_dict
         self.I_I_weight_scale_dict = I_I_weight_scale_dict
+        if E_E_weight_bounds_dict is not None:
+            self.E_E_weight_bounds_dict = E_E_weight_bounds_dict
+        else:
+            self.E_E_weight_bounds_dict = (None, None)
+        if E_I_weight_bounds_dict is not None:
+            self.E_I_weight_bounds_dict = E_I_weight_bounds_dict
+        else:
+            self.E_I_weight_bounds_dict = (None, None)
+        if I_E_weight_bounds_dict is not None:
+            self.I_E_weight_bounds_dict = I_E_weight_bounds_dict
+        else:
+            self.I_E_weight_bounds_dict = (None, None)
+        if I_I_weight_bounds_dict is not None:
+            self.I_I_weight_bounds_dict = I_I_weight_bounds_dict
+        else:
+            self.I_I_weight_bounds_dict = (None, None)
         self.re_init_weights()
 
     def re_init_weights(self, seed=None):
@@ -98,12 +81,21 @@ class Hebb_lat_inh_network(object):
                 self.random.uniform(0., 1., [curr_layer_dim, prev_layer_dim])
             curr_inh_layer_dim = self.inh_layer_dims[layer]
             if curr_inh_layer_dim > 0:
-                self.initial_E_I_weight_matrix_dict[layer] = \
-                    self.random.uniform(-1., 0., [curr_layer_dim, curr_inh_layer_dim])
-                self.initial_I_E_weight_matrix_dict[layer] = \
-                    self.random.uniform(0., 1., [curr_inh_layer_dim, curr_layer_dim])
-                self.initial_I_I_weight_matrix_dict[layer] = \
-                    self.random.uniform(-1., 0., [curr_inh_layer_dim, curr_inh_layer_dim])
+                if curr_inh_layer_dim > 1:
+                    self.initial_E_I_weight_matrix_dict[layer] = \
+                        self.random.uniform(-1., 0., [curr_layer_dim, curr_inh_layer_dim])
+                    self.initial_I_E_weight_matrix_dict[layer] = \
+                        self.random.uniform(0., 1., [curr_inh_layer_dim, curr_layer_dim])
+                    self.initial_I_I_weight_matrix_dict[layer] = \
+                        self.random.uniform(-1., 0., [curr_inh_layer_dim, curr_inh_layer_dim])
+                else:
+                    self.initial_E_I_weight_matrix_dict[layer] = np.ones([curr_layer_dim, curr_inh_layer_dim]) * \
+                                                                 self.E_I_weight_scale_dict[layer]
+                    self.initial_I_E_weight_matrix_dict[layer] = np.ones([curr_inh_layer_dim, curr_layer_dim]) * \
+                                                                 self.I_E_weight_scale_dict[layer]
+                    self.initial_I_I_weight_matrix_dict[layer] = np.ones([curr_inh_layer_dim, curr_inh_layer_dim]) * \
+                                                                 self.I_I_weight_scale_dict[layer]
+
         self.initial_E_E_weight_matrix_dict, self.initial_E_I_weight_matrix_dict, \
         self.initial_I_E_weight_matrix_dict, self.initial_I_I_weight_matrix_dict = \
             self.normalize_weights(self.initial_E_E_weight_matrix_dict, self.initial_E_I_weight_matrix_dict,
@@ -111,14 +103,16 @@ class Hebb_lat_inh_network(object):
 
     def normalize_weights(self, E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict,
                           I_I_weight_matrix_dict):
-        for matrix_dict, weight_scale_dict in \
-                zip([E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict,
-                     I_I_weight_matrix_dict],
-                    [self.E_E_weight_scale_dict, self.E_I_weight_scale_dict, self.I_E_weight_scale_dict,
-                     self.I_I_weight_scale_dict]):
-            for layer in matrix_dict:
-                matrix_dict[layer] = weight_scale_dict[layer] * matrix_dict[layer] / \
-                                     np.sum(np.abs(matrix_dict[layer]), axis=1)[:, np.newaxis]
+        for layer in range(1, self.num_layers):
+            E_E_weight_matrix_dict[layer] = self.E_E_weight_scale_dict[layer] * E_E_weight_matrix_dict[layer] / \
+                                            np.sum(np.abs(E_E_weight_matrix_dict[layer]), axis=1)[:, np.newaxis]
+            curr_inh_layer_dim = self.inh_layer_dims[layer]
+            if curr_inh_layer_dim > 1:
+                for weight_matrix_dict, weight_scale_dict in \
+                        zip([E_I_weight_matrix_dict, I_E_weight_matrix_dict, I_I_weight_matrix_dict],
+                            [self.E_I_weight_scale_dict, self.I_E_weight_scale_dict, self.I_I_weight_scale_dict]):
+                    weight_matrix_dict[layer] = weight_scale_dict[layer] * weight_matrix_dict[layer] / \
+                                         np.sum(np.abs(weight_matrix_dict[layer]), axis=1)[:, np.newaxis]
         return E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict, I_I_weight_matrix_dict
 
     def load_input_patterns(self, input_pattern_matrix):
@@ -153,6 +147,8 @@ class Hebb_lat_inh_network(object):
                 self.E_E_learning_rule_dict[layer] = get_Hebb_rule(E_E_learning_rate_dict[layer], direction=1)
             elif E_E_learning_rule_dict[layer] == 'Anti-Hebb + weight norm':
                 self.E_E_learning_rule_dict[layer] = get_anti_Hebb_rule(E_E_learning_rate_dict[layer], direction=1)
+            elif E_E_learning_rule_dict[layer] is None:
+                self.E_E_learning_rule_dict[layer] = null_rule
             else:
                 raise Exception('Hebb_lat_inh_network.config_learning_rules: learning rule not recognized: %s' %
                                 E_E_learning_rule_dict[layer])
@@ -161,6 +157,8 @@ class Hebb_lat_inh_network(object):
                 self.E_I_learning_rule_dict[layer] = get_Hebb_rule(E_I_learning_rate_dict[layer], direction=-1)
             elif E_I_learning_rule_dict[layer] == 'Anti-Hebb + weight norm':
                 self.E_I_learning_rule_dict[layer] = get_anti_Hebb_rule(E_I_learning_rate_dict[layer], direction=-1)
+            elif E_I_learning_rule_dict[layer] is None:
+                self.E_I_learning_rule_dict[layer] = null_rule
             else:
                 raise Exception('Hebb_lat_inh_network.config_learning_rules: learning rule not recognized: %s' %
                                 E_I_learning_rule_dict[layer])
@@ -169,6 +167,8 @@ class Hebb_lat_inh_network(object):
                 self.I_E_learning_rule_dict[layer] = get_Hebb_rule(I_E_learning_rate_dict[layer], direction=1)
             elif I_E_learning_rule_dict[layer] == 'Anti-Hebb + weight norm':
                 self.I_E_learning_rule_dict[layer] = get_anti_Hebb_rule(I_E_learning_rate_dict[layer], direction=1)
+            elif I_E_learning_rule_dict[layer] is None:
+                self.I_E_learning_rule_dict[layer] = null_rule
             else:
                 raise Exception('Hebb_lat_inh_network.config_learning_rules: learning rule not recognized: %s' %
                                 I_E_learning_rule_dict[layer])
@@ -177,6 +177,8 @@ class Hebb_lat_inh_network(object):
                 self.I_I_learning_rule_dict[layer] = get_Hebb_rule(I_I_learning_rate_dict[layer], direction=-1)
             elif I_I_learning_rule_dict[layer] == 'Anti-Hebb + weight norm':
                 self.I_I_learning_rule_dict[layer] = get_anti_Hebb_rule(I_I_learning_rate_dict[layer], direction=-1)
+            elif I_I_learning_rule_dict[layer] is None:
+                self.I_I_learning_rule_dict[layer] = null_rule
             else:
                 raise Exception('Hebb_lat_inh_network.config_learning_rules: learning rule not recognized: %s' %
                                 I_I_learning_rule_dict[layer])
@@ -294,7 +296,7 @@ class Hebb_lat_inh_network(object):
         for layer in sorted(list(layer_output_dict.keys())):
             if layer == self.num_layers - 1:
                 final_output = layer_output_dict[layer]
-                sorted_row_indexes = get_argmax_row_indexes(final_output)
+                sorted_row_indexes = get_diag_argmax_row_indexes(final_output)
                 cbar = axes[0][layer].imshow(final_output[sorted_row_indexes], aspect='auto', interpolation='none')
             else:
                 cbar = axes[0][layer].imshow(layer_output_dict[layer], aspect='auto', interpolation='none')
@@ -362,6 +364,7 @@ class Hebb_lat_inh_network(object):
         self.layer_output_dict_history = []
         self.layer_inh_output_dict_history = []
 
+        block_output_activity_history = []
         self.accuracy_history = []
 
         num_patterns = self.input_pattern_matrix.shape[-1]
@@ -385,22 +388,20 @@ class Hebb_lat_inh_network(object):
                     self.get_delta_weights(E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict,
                                            I_I_weight_matrix_dict, layer_output_dict, layer_inh_output_dict)
 
-                for layer in delta_E_E_weight_matrix_dict:
-                    prev_E_E_weight_matrix = E_E_weight_matrix_dict[layer]
-                    E_E_weight_matrix_dict[layer] = \
-                        np.maximum(0., prev_E_E_weight_matrix + delta_E_E_weight_matrix_dict[layer])
-                for layer in delta_E_I_weight_matrix_dict:
-                    prev_E_I_weight_matrix = E_I_weight_matrix_dict[layer]
-                    E_I_weight_matrix_dict[layer] = \
-                        np.minimum(self.I_floor_weight, prev_E_I_weight_matrix + delta_E_I_weight_matrix_dict[layer])
-                for layer in delta_I_E_weight_matrix_dict:
-                    prev_I_E_weight_matrix = I_E_weight_matrix_dict[layer]
-                    I_E_weight_matrix_dict[layer] = \
-                        np.maximum(0., prev_I_E_weight_matrix + delta_I_E_weight_matrix_dict[layer])
-                for layer in delta_I_I_weight_matrix_dict:
-                    prev_I_I_weight_matrix = I_I_weight_matrix_dict[layer]
-                    I_I_weight_matrix_dict[layer] = \
-                        np.minimum(self.I_floor_weight, prev_I_I_weight_matrix + delta_I_I_weight_matrix_dict[layer])
+                for delta_weight_matrix_dict, weight_matrix_dict, weight_bounds_dict in \
+                        zip([delta_E_E_weight_matrix_dict, delta_E_I_weight_matrix_dict, delta_I_E_weight_matrix_dict,
+                             delta_I_I_weight_matrix_dict],
+                            [E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict,
+                             I_I_weight_matrix_dict],
+                            [self.E_E_weight_bounds_dict, self.E_I_weight_bounds_dict, self.I_E_weight_bounds_dict,
+                             self.I_I_weight_bounds_dict]):
+                    for layer in delta_weight_matrix_dict:
+                        this_weight_matrix = weight_matrix_dict[layer] + delta_weight_matrix_dict[layer]
+                        if weight_bounds_dict[0] is not None:
+                            this_weight_matrix = np.maximum(this_weight_matrix, weight_bounds_dict[0])
+                        if weight_bounds_dict[1] is not None:
+                            this_weight_matrix = np.minimum(this_weight_matrix, weight_bounds_dict[1])
+                        weight_matrix_dict[layer] = this_weight_matrix
 
                 E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict, I_I_weight_matrix_dict = \
                     self.normalize_weights(E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict,
@@ -413,15 +414,21 @@ class Hebb_lat_inh_network(object):
                 self.E_I_weight_matrix_dict_history.append(deepcopy(E_I_weight_matrix_dict))
                 self.I_E_weight_matrix_dict_history.append(deepcopy(I_E_weight_matrix_dict))
                 self.I_I_weight_matrix_dict_history.append(deepcopy(I_I_weight_matrix_dict))
+
             layer_output_dict, layer_inh_output_dict = \
                 self.get_layer_activities(self.input_pattern_matrix, E_E_weight_matrix_dict, E_I_weight_matrix_dict,
                                           I_E_weight_matrix_dict, I_I_weight_matrix_dict)
-            final_output = layer_output_dict[self.num_layers - 1]
-            sorted_row_indexes = get_argmax_row_indexes(final_output)
-            target_argmax = np.arange(len(sorted_row_indexes))
-            accuracy = np.count_nonzero(np.argmax(final_output[sorted_row_indexes, :], axis=1) == target_argmax) / \
-                       len(sorted_row_indexes)
+            block_output_activity_history.append(np.copy(layer_output_dict[self.num_layers - 1]))
+
+        final_output_activity = block_output_activity_history[-1]
+        sorted_row_indexes = get_diag_argmax_row_indexes(final_output_activity)
+        target_argmax = np.arange(len(sorted_row_indexes))
+        for output_activity in block_output_activity_history:
+            accuracy = np.count_nonzero(np.argmax(output_activity[sorted_row_indexes, :], axis=1) == target_argmax) / \
+                       len(sorted_row_indexes) * 100.
             self.accuracy_history.append(accuracy)
+
+        self.accuracy_history = np.array(self.accuracy_history)
 
         if plot:
             sorted_indexes = []
@@ -470,7 +477,7 @@ class Hebb_lat_inh_network(object):
                                       I_E_weight_matrix_dict, I_I_weight_matrix_dict)
 
         final_output = layer_output_dict[self.num_layers - 1]
-        sorted_row_indexes = get_argmax_row_indexes(final_output)
+        sorted_row_indexes = get_diag_argmax_row_indexes(final_output)
         loss = np.mean((self.target_output_pattern_matrix - final_output[sorted_row_indexes, :])**2.)
         if disp:
             print('Loss: %.4E, Argmax: %s' % (loss, np.argmax(final_output[sorted_row_indexes], axis=1)))
@@ -507,8 +514,7 @@ def main():
 
     network = Hebb_lat_inh_network(num_hidden_layers=num_hidden_layers, input_dim=input_dim, hidden_dim=hidden_dim,
                                    hidden_inh_dim=hidden_inh_dim, output_dim=output_dim, output_inh_dim=output_inh_dim,
-                                   tau=tau, num_steps=num_steps, I_floor_weight=I_floor_weight, activation_f=ReLU,
-                                   seed=seed)
+                                   tau=tau, num_steps=num_steps, activation_f=ReLU, seed=seed)
 
     input_peak_rate = 1.
     input_pattern_matrix = get_n_hot_patterns(n_hot, input_dim).T * input_peak_rate
@@ -572,7 +578,8 @@ def main():
                 I_E_weight_scale_dict[layer] = output_I_E_weight_scale
                 I_I_weight_scale_dict[layer] = output_I_I_weight_scale
 
-    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict)
+    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
+                         E_I_weight_bounds_dict=(None, I_floor_weight), I_I_weight_bounds_dict=(None, I_floor_weight))
 
     E_E_learning_rate_dict = {}
     E_I_learning_rate_dict = {}

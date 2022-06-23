@@ -1,5 +1,6 @@
 from nested.optimize_utils import Context, param_array_to_dict
 from train_Hebb_lateral_inh_network import *
+import h5py
 
 
 context = Context()
@@ -31,7 +32,7 @@ def config_worker():
     n_hot = 2
     I_floor_weight = -0.05
     if 'anti_Hebb_I' not in context():
-        anti_Hebb_I = True
+        anti_Hebb_I = False
     if 'plot' not in context():
         plot = False
     if 'num_blocks' not in context():
@@ -41,8 +42,7 @@ def config_worker():
 
     network = Hebb_lat_inh_network(num_hidden_layers=num_hidden_layers, input_dim=input_dim, hidden_dim=hidden_dim,
                                    hidden_inh_dim=hidden_inh_dim, output_dim=output_dim, output_inh_dim=output_inh_dim,
-                                   tau=tau, num_steps=num_steps, I_floor_weight=I_floor_weight, activation_f=ReLU,
-                                   seed=seed)
+                                   tau=tau, num_steps=num_steps, activation_f=ReLU, seed=seed)
 
     input_peak_rate = 1.
     input_pattern_matrix = get_n_hot_patterns(n_hot, input_dim).T * input_peak_rate
@@ -68,13 +68,71 @@ def compute_features(x, model_id, export=False):
     loss = test_Hebb_lateral_inh_network(x, network, context.num_blocks, context.anti_Hebb_I, context.shuffle,
                                          context.param_names, disp=context.disp, plot=context.plot)
 
+    if export:
+        stable_blocks = 0
+        max_accuracy = np.max(network.accuracy_history)
+        for stable_index, val in enumerate(network.accuracy_history):
+            if val == max_accuracy:
+                stable_blocks += 1
+                last_max_index = stable_index
+            else:
+                stable_blocks = 0
+            if stable_blocks == 50:
+                break
+        stable_index = max(last_max_index, stable_index)
+        print('max_index: %i; stable_index: %i' % (last_max_index, stable_index))
+        num_patterns = network.input_pattern_matrix.shape[-1]
+        layer_output_dict, layer_inh_output_dict = \
+            network.get_layer_activities(network.input_pattern_matrix,
+                                         network.E_E_weight_matrix_dict_history[last_max_index * num_patterns],
+                                         network.E_I_weight_matrix_dict_history[last_max_index * num_patterns],
+                                         network.I_E_weight_matrix_dict_history[last_max_index * num_patterns],
+                                         network.I_I_weight_matrix_dict_history[last_max_index * num_patterns])
+
+        with h5py.File(context.export_file_path, 'a') as f:
+            group = f.create_group(context.label[1:])
+            subgroup = group.create_group('activity_dict')
+            for layer in range(network.num_layers):
+                data_group = subgroup.create_group(str(layer))
+                if layer == network.num_layers - 1:
+                    sorted_row_indexes = get_diag_argmax_row_indexes(layer_output_dict[layer])
+                    data_group.create_dataset('E', data=layer_output_dict[layer][sorted_row_indexes, :],
+                                              compression='gzip')
+                else:
+                    data_group.create_dataset('E', data=layer_output_dict[layer], compression='gzip')
+                if layer in layer_inh_output_dict:
+                    data_group.create_dataset('I', data=layer_inh_output_dict[layer], compression='gzip')
+            subgroup = group.create_group('weight_dict')
+            for layer in network.E_E_weight_matrix_dict_history[-1]:
+                data_group = subgroup.create_group(str(layer))
+                data_group.create_dataset(
+                    'E_FF',
+                    data=network.E_E_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                    compression='gzip')
+                if layer in network.E_I_weight_matrix_dict_history[-1]:
+                    data_group.create_dataset(
+                        'E_I',
+                        data=network.E_I_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                        compression='gzip')
+                if layer in network.I_E_weight_matrix_dict_history[-1]:
+                    data_group.create_dataset(
+                        'I_E',
+                        data=network.I_E_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                        compression='gzip')
+                if layer in network.I_I_weight_matrix_dict_history[-1]:
+                    data_group.create_dataset(
+                        'I_I',
+                        data=network.I_I_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                        compression='gzip')
+            subgroup = group.create_group('metrics_dict')
+            subgroup.create_dataset('accuracy', data=network.accuracy_history[:stable_index + 1], compression='gzip')
+
     if context.plot:
         layer_output_dict, layer_inh_output_dict = \
             network.get_layer_activities(network.input_pattern_matrix, network.E_E_weight_matrix_dict_history[-1],
                                          network.E_I_weight_matrix_dict_history[-1],
                                          network.I_E_weight_matrix_dict_history[-1],
                                          network.I_I_weight_matrix_dict_history[-1])
-
         network.plot_network_state_summary(network.E_E_weight_matrix_dict_history[-1],
                                            network.E_I_weight_matrix_dict_history[-1],
                                            network.I_E_weight_matrix_dict_history[-1],
@@ -114,7 +172,9 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, anti_Hebb_I, shuffle, 
             I_E_weight_scale_dict[layer] = I_E_weight_scale
             I_I_weight_scale_dict[layer] = I_I_weight_scale
 
-    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict)
+    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
+                         E_I_weight_bounds_dict=(None, context.I_floor_weight),
+                         I_I_weight_bounds_dict=(None, context.I_floor_weight))
 
     E_E_learning_rate_dict = {}
     E_I_learning_rate_dict = {}
@@ -136,13 +196,18 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, anti_Hebb_I, shuffle, 
     for layer in range(1, network.num_layers):
         E_E_learning_rule_dict[layer] = 'Hebb + weight norm'
         if network.inh_layer_dims[layer] > 0:
-            I_E_learning_rule_dict[layer] = 'Hebb + weight norm'
-            if anti_Hebb_I:
-                E_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
-                I_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
+            if network.inh_layer_dims[layer] > 1:
+                I_E_learning_rule_dict[layer] = 'Hebb + weight norm'
+                if anti_Hebb_I:
+                    E_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
+                    I_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
+                else:
+                    E_I_learning_rule_dict[layer] = 'Hebb + weight norm'
+                    I_I_learning_rule_dict[layer] = 'Hebb + weight norm'
             else:
-                E_I_learning_rule_dict[layer] = 'Hebb + weight norm'
-                I_I_learning_rule_dict[layer] = 'Hebb + weight norm'
+                I_E_learning_rule_dict[layer] = None
+                E_I_learning_rule_dict[layer] = None
+                I_I_learning_rule_dict[layer] = None
 
     network.config_learning_rules(E_E_learning_rule_dict, E_I_learning_rule_dict, I_E_learning_rule_dict,
                                   I_I_learning_rule_dict, E_E_learning_rate_dict, E_I_learning_rate_dict,

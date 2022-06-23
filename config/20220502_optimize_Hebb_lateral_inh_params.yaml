@@ -66,11 +66,25 @@ B:
   I_I_output_weight_scale: 9.539793E-01
 # 7 -> 21[1] (200 blocks)
 A:
-  E_E_learning_rate: 4.392767E-01
-  E_E_weight_scale: 2.820508E+00
-  E_I_learning_rate: 3.851672E-01
-  E_I_weight_scale: 4.473693E+00
-  I_E_learning_rate: 4.089656E-02
-  I_E_weight_scale: 9.937887E+00
-  I_I_learning_rate: 3.259708E-02
-  I_I_weight_scale: 0.
+  E_E_learning_rate: 4.999473E-01
+  E_E_weight_scale: 2.454925E+00
+  E_I_learning_rate: 1.124456E-01
+  E_I_weight_scale: 5.038043E+00
+  I_E_learning_rate: 3.297908E-03
+  I_E_weight_scale: 5.916013E+00
+  I_I_learning_rate: 4.481688E-03
+  I_I_weight_scale: 0.000000E+00
+# 21 -> 7[3] -> 21[7] (1000 blocks)
+C:
+  E_E_hidden_weight_scale: 9.946460E+00
+  E_E_learning_rate: 2.380667E-01
+  E_E_output_weight_scale: 1.912217E+00
+  E_I_hidden_weight_scale: 4.613845E+00
+  E_I_learning_rate: 3.774893E-01
+  E_I_output_weight_scale: 3.853204E+00
+  I_E_hidden_weight_scale: 3.902480E+00
+  I_E_learning_rate: 5.384005E-03
+  I_E_output_weight_scale: 4.139669E+00
+  I_I_hidden_weight_scale: 1.608598E+00
+  I_I_learning_rate: 3.998075E-01
+  I_I_output_weight_scale: 1.307423E+00

@@ -25,8 +25,12 @@ bounds:
     - 10.
 default_params:
   I_I_weight_scale: 0.
+  I_I_learning_rate: 0.
+  I_E_weight_scale: 1.
+  I_E_learning_rate: 0.
+  E_I_learning_rate: 0.
 kwargs:
-  anti_Hebb_I: True
+  anti_Hebb_I: False
   output_inh_dim: 1
   num_blocks: 200
 feature_names:
@@ -43,9 +47,9 @@ param_gen: PopulationAnnealing
 x0:
   E_E_learning_rate: 4.392767E-01
   E_E_weight_scale: 2.820508E+00
-  E_I_learning_rate: 3.851672E-01
+  E_I_learning_rate: 0.
   E_I_weight_scale: 4.473693E+00
-  I_E_learning_rate: 4.089656E-02
-  I_E_weight_scale: 9.937887E+00
-  I_I_learning_rate: 3.259708E-02
+  I_E_learning_rate: 0.
+  I_E_weight_scale: 1.
+  I_I_learning_rate: 0.
   I_I_weight_scale: 0.
