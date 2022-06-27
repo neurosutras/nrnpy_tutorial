@@ -403,6 +403,11 @@ class Hebb_lat_inh_network(object):
                             this_weight_matrix = np.minimum(this_weight_matrix, weight_bounds_dict[1])
                         weight_matrix_dict[layer] = this_weight_matrix
 
+                for layer in I_I_weight_matrix_dict:
+                    # no autapses
+                    diag_indexes = np.diag_indices_from(I_I_weight_matrix_dict[layer])
+                    I_I_weight_matrix_dict[layer][diag_indexes] = 0.
+
                 E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict, I_I_weight_matrix_dict = \
                     self.normalize_weights(E_E_weight_matrix_dict, E_I_weight_matrix_dict, I_E_weight_matrix_dict,
                                            I_I_weight_matrix_dict)
