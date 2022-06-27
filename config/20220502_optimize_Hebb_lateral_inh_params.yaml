@@ -8,7 +8,7 @@
   I_E_weight_scale: 9.937887E+00
   I_I_learning_rate: 3.259708E-02
   I_I_weight_scale: 5.002013E-01
-# 7 -> 7[7] -> 21[7] (100 blocks)
+# 21 -> 7[7] -> 21[7] (100 blocks)
 1:
   E_E_hidden_weight_scale: 8.976260E+00
   E_E_learning_rate: 3.052508E-01

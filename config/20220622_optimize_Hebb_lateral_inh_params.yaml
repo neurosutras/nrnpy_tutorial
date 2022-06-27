@@ -1,9 +1,9 @@
 # 7 -> 21[1] (200 blocks)
 A:
-  E_E_learning_rate: 1.106298E-03
-  E_E_weight_scale: 5.182234E-01
+  E_E_learning_rate: 4.999255E-01
+  E_E_weight_scale: 2.546795E+00
   E_I_learning_rate: 0.000000E+00
-  E_I_weight_scale: 5.016645E-01
+  E_I_weight_scale: 1.533300E+00
   I_E_learning_rate: 0.000000E+00
   I_E_weight_scale: 1.000000E+00
   I_I_learning_rate: 0.000000E+00

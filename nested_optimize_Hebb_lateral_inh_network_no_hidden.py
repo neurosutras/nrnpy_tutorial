@@ -83,12 +83,13 @@ def compute_features(x, model_id, export=False):
         stable_index = max(last_max_index, stable_index)
         print('max_index: %i; stable_index: %i' % (last_max_index, stable_index))
         num_patterns = network.input_pattern_matrix.shape[-1]
+        stable_epoch_index = (last_max_index + 1) * num_patterns - 1
         layer_output_dict, layer_inh_output_dict = \
             network.get_layer_activities(network.input_pattern_matrix,
-                                         network.E_E_weight_matrix_dict_history[last_max_index * num_patterns],
-                                         network.E_I_weight_matrix_dict_history[last_max_index * num_patterns],
-                                         network.I_E_weight_matrix_dict_history[last_max_index * num_patterns],
-                                         network.I_I_weight_matrix_dict_history[last_max_index * num_patterns])
+                                         network.E_E_weight_matrix_dict_history[stable_epoch_index],
+                                         network.E_I_weight_matrix_dict_history[stable_epoch_index],
+                                         network.I_E_weight_matrix_dict_history[stable_epoch_index],
+                                         network.I_I_weight_matrix_dict_history[stable_epoch_index])
 
         with h5py.File(context.export_file_path, 'a') as f:
             group = f.create_group(context.label[1:])
@@ -97,7 +98,7 @@ def compute_features(x, model_id, export=False):
                 data_group = subgroup.create_group(str(layer))
                 if layer == network.num_layers - 1:
                     sorted_row_indexes = get_diag_argmax_row_indexes(layer_output_dict[layer])
-                    data_group.create_dataset('E', data=layer_output_dict[layer][sorted_row_indexes, :],
+                    data_group.create_dataset('E', data=layer_output_dict[layer][sorted_row_indexes,:],
                                               compression='gzip')
                 else:
                     data_group.create_dataset('E', data=layer_output_dict[layer], compression='gzip')
@@ -108,22 +109,22 @@ def compute_features(x, model_id, export=False):
                 data_group = subgroup.create_group(str(layer))
                 data_group.create_dataset(
                     'E_FF',
-                    data=network.E_E_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                    data=network.E_E_weight_matrix_dict_history[stable_epoch_index][layer],
                     compression='gzip')
                 if layer in network.E_I_weight_matrix_dict_history[-1]:
                     data_group.create_dataset(
                         'E_I',
-                        data=network.E_I_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                        data=network.E_I_weight_matrix_dict_history[stable_epoch_index][layer],
                         compression='gzip')
                 if layer in network.I_E_weight_matrix_dict_history[-1]:
                     data_group.create_dataset(
                         'I_E',
-                        data=network.I_E_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                        data=network.I_E_weight_matrix_dict_history[stable_epoch_index][layer],
                         compression='gzip')
                 if layer in network.I_I_weight_matrix_dict_history[-1]:
                     data_group.create_dataset(
                         'I_I',
-                        data=network.I_I_weight_matrix_dict_history[last_max_index * num_patterns][layer],
+                        data=network.I_I_weight_matrix_dict_history[stable_epoch_index][layer],
                         compression='gzip')
             subgroup = group.create_group('metrics_dict')
             subgroup.create_dataset('accuracy', data=network.accuracy_history[:stable_index + 1], compression='gzip')
