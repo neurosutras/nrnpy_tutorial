@@ -89,11 +89,11 @@ class Hebb_lat_inh_network(object):
                     self.initial_I_I_weight_matrix_dict[layer] = \
                         self.random.uniform(-1., 0., [curr_inh_layer_dim, curr_inh_layer_dim])
                 else:
-                    self.initial_E_I_weight_matrix_dict[layer] = np.ones([curr_layer_dim, curr_inh_layer_dim]) * \
+                    self.initial_E_I_weight_matrix_dict[layer] = -np.ones([curr_layer_dim, curr_inh_layer_dim]) * \
                                                                  self.E_I_weight_scale_dict[layer]
                     self.initial_I_E_weight_matrix_dict[layer] = np.ones([curr_inh_layer_dim, curr_layer_dim]) * \
                                                                  self.I_E_weight_scale_dict[layer]
-                    self.initial_I_I_weight_matrix_dict[layer] = np.ones([curr_inh_layer_dim, curr_inh_layer_dim]) * \
+                    self.initial_I_I_weight_matrix_dict[layer] = -np.ones([curr_inh_layer_dim, curr_inh_layer_dim]) * \
                                                                  self.I_I_weight_scale_dict[layer]
 
         self.initial_E_E_weight_matrix_dict, self.initial_E_I_weight_matrix_dict, \

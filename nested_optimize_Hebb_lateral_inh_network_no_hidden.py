@@ -30,7 +30,8 @@ def config_worker():
     disp = True
     shuffle = True
     n_hot = 2
-    I_floor_weight = -0.05
+    if 'I_floor_weight' not in context():
+        I_floor_weight = -0.05
     if 'anti_Hebb_I' not in context():
         anti_Hebb_I = False
     if 'plot' not in context():
@@ -65,8 +66,8 @@ def config_worker():
 def compute_features(x, model_id, export=False):
 
     network = context.network
-    loss = test_Hebb_lateral_inh_network(x, network, context.num_blocks, context.anti_Hebb_I, context.shuffle,
-                                         context.param_names, disp=context.disp, plot=context.plot)
+    loss = test_Hebb_lateral_inh_network(x, network, context.num_blocks, context.I_floor_weight, context.anti_Hebb_I,
+                                         context.shuffle, context.param_names, disp=context.disp, plot=context.plot)
 
     if export:
         stable_blocks = 0
@@ -147,7 +148,8 @@ def get_objectives(features, model_id, export=False):
     return features, features
 
 
-def test_Hebb_lateral_inh_network(x, network, num_blocks, anti_Hebb_I, shuffle, param_names, disp=False, plot=False):
+def test_Hebb_lateral_inh_network(x, network, num_blocks, I_floor_weight, anti_Hebb_I, shuffle, param_names, disp=False,
+                                  plot=False):
 
     x_dict = param_array_to_dict(x, param_names)
 
@@ -173,8 +175,8 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, anti_Hebb_I, shuffle, 
             I_I_weight_scale_dict[layer] = I_I_weight_scale
 
     network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
-                         E_I_weight_bounds_dict=(None, context.I_floor_weight),
-                         I_I_weight_bounds_dict=(None, context.I_floor_weight))
+                         E_I_weight_bounds_dict=(None, I_floor_weight),
+                         I_I_weight_bounds_dict=(None, I_floor_weight))
 
     E_E_learning_rate_dict = {}
     E_I_learning_rate_dict = {}

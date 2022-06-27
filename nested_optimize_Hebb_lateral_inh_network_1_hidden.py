@@ -20,7 +20,10 @@ def config_worker():
     else:
         hidden_inh_dim = int(context.hidden_inh_dim)
     output_dim = 21
-    output_inh_dim = 7
+    if 'output_inh_dim' not in context():
+        output_inh_dim = 7
+    else:
+        output_inh_dim = int(context.output_inh_dim)
     tau = 3
     num_steps = 12
     seed = 0
