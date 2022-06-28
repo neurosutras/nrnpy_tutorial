@@ -1,46 +1,47 @@
 bounds:
   E_E_learning_rate:
     - 0.0001
-    - 0.5
+    - 1.
   E_I_learning_rate:
     - 0.0001
-    - 0.5
+    - 1.
   I_E_learning_rate:
     - 0.0001
-    - 0.5
+    - 1.
   I_I_learning_rate:
     - 0.0001
-    - 0.5
+    - 1.
   E_E_output_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   E_I_output_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   I_E_output_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   I_I_output_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   E_E_hidden_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   E_I_hidden_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   I_E_hidden_weight_scale:
-    - 0.5
+    - 0.1
     - 10.
   I_I_hidden_weight_scale:
-    - 0.
+    - 0.1
     - 10.
 default_params:
-  I_I_hidden_weight_scale: 0.
 kwargs:
   anti_Hebb_I: False
-  hidden_inh_dim: 1
-  num_blocks: 400
+  hidden_inh_dim: 7
+  output_inh_dim: 7
+  num_blocks: 200
+  I_floor_weight: -0.15
 feature_names:
 - MSE_loss
 get_features_stages:
@@ -64,4 +65,4 @@ x0:
   E_E_hidden_weight_scale: 5.
   E_I_hidden_weight_scale: 2.
   I_E_hidden_weight_scale: 1.
-  I_I_hidden_weight_scale: 0.
+  I_I_hidden_weight_scale: 1.
