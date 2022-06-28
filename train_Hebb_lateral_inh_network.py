@@ -26,19 +26,23 @@ class Hebb_lat_inh_network(object):
         self.seed = seed
         self.random = np.random.default_rng(seed=self.seed)
         self.num_layers = num_hidden_layers + 2
-        if isinstance(self.hidden_dim, list):
-            if len(self.hidden_dim) != self.num_hidden_layers:
-                raise Exception('Hebb_lat_inh_network: hidden_dim must be int or list of len num_hidden_layers')
-            self.layer_dims = [self.input_dim] + self.hidden_dim + [self.output_dim]
-            if not isinstance(self.hidden_inh_dim, list) or len(self.hidden_inh_dim) != self.num_hidden_layers:
-                raise Exception('Hebb_lat_inh_network: hidden_inh_dim must be int or list of len num_hidden_layers')
-            self.inh_layer_dims = [0] + self.hidden_inh_dim + [self.output_inh_dim]
+        if num_hidden_layers > 0:
+            if isinstance(self.hidden_dim, list):
+                if len(self.hidden_dim) != self.num_hidden_layers:
+                    raise Exception('Hebb_lat_inh_network: hidden_dim must be int or list of len num_hidden_layers')
+                self.layer_dims = [self.input_dim] + self.hidden_dim + [self.output_dim]
+                if not isinstance(self.hidden_inh_dim, list) or len(self.hidden_inh_dim) != self.num_hidden_layers:
+                    raise Exception('Hebb_lat_inh_network: hidden_inh_dim must be int or list of len num_hidden_layers')
+                self.inh_layer_dims = [0] + self.hidden_inh_dim + [self.output_inh_dim]
 
-        elif isinstance(self.hidden_dim, int):
-            self.layer_dims = [self.input_dim] + self.num_hidden_layers * [self.hidden_dim] + [self.output_dim]
-            if not isinstance(self.hidden_inh_dim, int):
-                raise Exception('Hebb_lat_inh_network: hidden_inh_dim must be int or list of len num_hidden_layers')
-            self.inh_layer_dims = [0] + self.num_hidden_layers * [self.hidden_inh_dim] + [self.output_inh_dim]
+            elif isinstance(self.hidden_dim, int):
+                self.layer_dims = [self.input_dim] + self.num_hidden_layers * [self.hidden_dim] + [self.output_dim]
+                if not isinstance(self.hidden_inh_dim, int):
+                    raise Exception('Hebb_lat_inh_network: hidden_inh_dim must be int or list of len num_hidden_layers')
+                self.inh_layer_dims = [0] + self.num_hidden_layers * [self.hidden_inh_dim] + [self.output_inh_dim]
+        else:
+            self.layer_dims = [self.input_dim, self.output_dim]
+            self.inh_layer_dims = [0, self.output_inh_dim]
     
     def init_weights(self, E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
                      E_E_weight_bounds_dict=None, E_I_weight_bounds_dict=None, I_E_weight_bounds_dict=None,

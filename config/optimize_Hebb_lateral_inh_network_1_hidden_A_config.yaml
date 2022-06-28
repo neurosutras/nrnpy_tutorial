@@ -41,8 +41,8 @@ default_params:
   I_I_learning_rate: 0.
   I_E_hidden_weight_scale: 1.
   I_E_output_weight_scale: 1.
-  E_I_learning_rate: 0.
   I_E_learning_rate: 0.
+  E_I_learning_rate: 0.
 kwargs:
   anti_Hebb_I: False
   hidden_inh_dim: 1
