@@ -21,10 +21,10 @@ bounds:
     - 0.1
     - 10.
   I_I_weight_scale:
-    - 0.
+    - 0.1
     - 10.
 default_params:
-  I_E_weight_scale: 1.
+#  I_E_weight_scale: 1.
 kwargs:
   anti_Hebb_I: False
   output_inh_dim: 7

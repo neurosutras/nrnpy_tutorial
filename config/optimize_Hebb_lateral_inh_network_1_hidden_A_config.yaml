@@ -1,0 +1,75 @@
+bounds:
+  E_E_learning_rate:
+    - 0.0001
+    - 1.
+  E_I_learning_rate:
+    - 0.
+    - 1.
+  I_E_learning_rate:
+    - 0.
+    - 1.
+  I_I_learning_rate:
+    - 0.
+    - 1.
+  E_E_output_weight_scale:
+    - 0.1
+    - 10.
+  E_I_output_weight_scale:
+    - 0.1
+    - 10.
+  I_E_output_weight_scale:
+    - 0.1
+    - 10.
+  I_I_output_weight_scale:
+    - 0.
+    - 10.
+  E_E_hidden_weight_scale:
+    - 0.1
+    - 10.
+  E_I_hidden_weight_scale:
+    - 0.1
+    - 10.
+  I_E_hidden_weight_scale:
+    - 0.1
+    - 10.
+  I_I_hidden_weight_scale:
+    - 0.
+    - 10.
+default_params:
+  I_I_hidden_weight_scale: 0.
+  I_I_output_weight_scale: 0.
+  I_I_learning_rate: 0.
+  I_E_hidden_weight_scale: 1.
+  I_E_output_weight_scale: 1.
+  E_I_learning_rate: 0.
+  I_E_learning_rate: 0.
+kwargs:
+  anti_Hebb_I: False
+  hidden_inh_dim: 1
+  output_inh_dim: 1
+  num_blocks: 200
+  I_floor_weight: 0.
+feature_names:
+- MSE_loss
+get_features_stages:
+- source: nested_optimize_Hebb_lateral_inh_network_1_hidden
+  compute_features: compute_features
+get_objectives:
+  nested_optimize_Hebb_lateral_inh_network_1_hidden: get_objectives
+objective_names:
+- MSE_loss
+optimization_title: Hebb_lateral_inh_network_1_hidden_A
+param_gen: PopulationAnnealing
+x0:
+  E_E_learning_rate: 0.05
+  E_I_learning_rate: 0.
+  I_E_learning_rate: 0.
+  I_I_learning_rate: 0.
+  E_E_output_weight_scale: 5.
+  E_I_output_weight_scale: 2.
+  I_E_output_weight_scale: 1.
+  I_I_output_weight_scale: 0.
+  E_E_hidden_weight_scale: 5.
+  E_I_hidden_weight_scale: 2.
+  I_E_hidden_weight_scale: 1.
+  I_I_hidden_weight_scale: 0.

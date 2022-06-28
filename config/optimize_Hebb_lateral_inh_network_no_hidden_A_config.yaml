@@ -3,13 +3,13 @@ bounds:
     - 0.0001
     - 1.
   E_I_learning_rate:
-    - 0.0001
+    - 0.
     - 1.
   I_E_learning_rate:
-    - 0.0001
+    - 0.
     - 1.
   I_I_learning_rate:
-    - 0.0001
+    - 0.
     - 1.
   E_E_weight_scale:
     - 0.1
