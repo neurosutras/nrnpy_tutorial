@@ -4,6 +4,7 @@ from train_simple_BTSP_network import *
 
 context = Context()
 
+
 def config_worker():
 
     ReLU = lambda x: np.maximum(0., x)
@@ -123,7 +124,7 @@ def test_simple_BTSP_network(x, network, num_blocks, dep_ratio, dep_th, dep_widt
     for layer in range(1, network.num_layers):
         curr_layer_dim = network.layer_dims[layer]
         prev_layer_dim = network.layer_dims[layer - 1]
-        if layer == 1:
+        if layer < network.num_layers - 1:
             initial_FF_weight_bounds_dict[layer] = \
                 (0., FF_max_init_weight_factor * hidden_FF_max_weight / prev_layer_dim)
             FF_weight_bounds_dict[layer] = (0., hidden_FF_max_weight)

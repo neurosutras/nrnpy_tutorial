@@ -35,7 +35,10 @@ bounds:
   FB_max_init_weight_factor:
     - 1.
     - 2.
-  E_I_soma_max_init_weight:
+  hidden_E_I_soma_max_init_weight:
+    - -2.
+    - -0.1
+  output_E_I_soma_max_init_weight:
     - -2.
     - -0.1
   I_soma_E_max_init_weight:
@@ -57,13 +60,13 @@ default_params:
 feature_names:
 - MSE_loss
 get_features_stages:
-- source: nested_optimize_simple_BTSP_network
+- source: nested_optimize_simple_BTSP_network_1_hidden
   compute_features: compute_features
 get_objectives:
-  nested_optimize_simple_BTSP_network: get_objectives
+  nested_optimize_simple_BTSP_network_1_hidden: get_objectives
 objective_names:
 - MSE_loss
-optimization_title: simple_BTSP_network
+optimization_title: simple_BTSP_network_1_hidden
 param_gen: PopulationAnnealing
 x0:
   hidden_FF_max_weight: 4.1352592
@@ -78,7 +81,8 @@ x0:
   FF_max_init_weight_factor: 0.65164461
   FB_min_init_weight_factor: 0.93366176
   FB_max_init_weight_factor: 1.31841213
-  E_I_soma_max_init_weight: -0.2
+  hidden_E_I_soma_max_init_weight: -0.2
+  output_E_I_soma_max_init_weight: -0.2
   I_soma_E_max_init_weight: 1.
   E_I_dend_max_init_weight: -0.1
   I_dend_E_max_init_weight: 1.

@@ -1,0 +1,85 @@
+bounds:
+  hidden_FF_max_weight:
+    - 1.5
+    - 5.
+  hidden_FB_max_weight:
+    - 1.5
+    - 5.
+  output_FF_max_weight:
+    - 1.5
+    - 5.
+  output_layer_pos_mod_th:
+    - 0.05
+    - 0.5
+  output_layer_neg_mod_th:
+    - -0.5
+    - -0.05
+  hidden_layer_pos_mod_th:
+    - 0.05
+    - 0.5
+  hidden_layer_neg_mod_th:
+    - -0.5
+    - -0.05
+  output_layer_pos_mod_learning_rate:
+    - 0.01
+    - 0.25
+  hidden_layer_pos_mod_learning_rate:
+    - 0.01
+    - 0.25
+  FF_max_init_weight_factor:
+    - 0.1
+    - 2.
+  FB_min_init_weight_factor:
+    - 0.
+    - 1.
+  FB_max_init_weight_factor:
+    - 1.
+    - 2.
+  E_I_soma_max_init_weight:
+    - -2.
+    - -0.1
+  I_soma_E_max_init_weight:
+    - 0.1
+    - 1.
+  E_I_dend_max_init_weight:
+    - -2.
+    - -0.1
+  I_dend_E_max_init_weight:
+    - 0.1
+    - 1.
+  neg_mod_pre_discount:
+    - 0.1
+    - 0.5
+default_params:
+  I_soma_E_max_init_weight: 1.
+  I_dend_E_max_init_weight: 1.
+  neg_mod_pre_discount: 0.25
+feature_names:
+- MSE_loss
+get_features_stages:
+- source: nested_optimize_simple_BTSP_network_flat
+  compute_features: compute_features
+get_objectives:
+  nested_optimize_simple_BTSP_network_flat: get_objectives
+objective_names:
+- MSE_loss
+optimization_title: simple_BTSP_network_flat
+param_gen: PopulationAnnealing
+x0:
+  hidden_FF_max_weight: 4.1352592
+  hidden_FB_max_weight: 4.1352592
+  output_FF_max_weight: 4.1352592
+  output_layer_pos_mod_th: 0.10097198
+  output_layer_neg_mod_th: -0.1216729
+  hidden_layer_pos_mod_th: 0.12487717
+  hidden_layer_neg_mod_th: -0.21777467
+  output_layer_pos_mod_learning_rate: 0.02084186
+  hidden_layer_pos_mod_learning_rate: 0.23604299
+  FF_max_init_weight_factor: 0.65164461
+  FB_min_init_weight_factor: 0.93366176
+  FB_max_init_weight_factor: 1.31841213
+  E_I_soma_max_init_weight: -0.2
+  I_soma_E_max_init_weight: 1.
+  E_I_dend_max_init_weight: -0.1
+  I_dend_E_max_init_weight: 1.
+  neg_mod_pre_discount: 0.25

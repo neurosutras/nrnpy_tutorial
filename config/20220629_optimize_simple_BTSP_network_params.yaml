@@ -18,4 +18,21 @@
   output_layer_pos_mod_learning_rate: 1.580927E-01
   output_layer_pos_mod_th: 1.105789E-01
 # 7 -> 21[1]
-
+A:
+  E_I_soma_max_init_weight: -1.484698E+00
+  FF_max_init_weight_factor: 1.001045E-01
+  I_soma_E_max_init_weight: 1.000000E+00
+  neg_mod_pre_discount: 2.500000E-01
+  output_FF_max_weight: 4.998271E+00
+  output_layer_neg_mod_th: -4.592181E-01
+  output_layer_pos_mod_learning_rate: 2.426774E-01
+  output_layer_pos_mod_th: 2.440709E-01
+no_inh:
+  E_I_soma_max_init_weight: -1.484698E+00
+  FF_max_init_weight_factor: 1.001045E-01
+  I_soma_E_max_init_weight: 0.
+  neg_mod_pre_discount: 2.500000E-01
+  output_FF_max_weight: 4.998271E+00
+  output_layer_neg_mod_th: -4.592181E-01
+  output_layer_pos_mod_learning_rate: 2.426774E-01
+  output_layer_pos_mod_th: 2.440709E-01

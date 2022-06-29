@@ -48,3 +48,6 @@ def get_diag_argmax_row_indexes(data):
         avail_row_indexes.remove(row_index)
         avail_col_indexes.remove(col_index)
     return final_row_indexes
+
+
+ReLU = lambda x: np.maximum(0., x)

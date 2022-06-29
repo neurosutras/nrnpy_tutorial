@@ -7,9 +7,9 @@ context = Context()
 
 def config_worker():
 
-    input_dim = 7
+    input_dim = 21
     if 'num_hidden_layers' not in context():
-        num_hidden_layers = 0
+        num_hidden_layers = 1
     else:
         num_hidden_layers = int(context.num_hidden_layers)
     hidden_dim = 7
@@ -17,19 +17,17 @@ def config_worker():
         inh_soma_dim = 1
     else:
         inh_soma_dim = int(context.inh_soma_dim)
+    output_dim = 21
     if 'inh_dend_dim' not in context():
         inh_dend_dim = 1
     else:
         inh_dend_dim = int(context.inh_dend_dim)
-    output_dim = 21
-
     tau = 3
     num_steps = 12
     seed = 0
     disp = True
     shuffle = True
-    n_hot = 2
-
+    n_hot = 1
     if 'plot' not in context():
         plot = False
     if 'num_blocks' not in context():
@@ -111,13 +109,23 @@ def test_simple_BTSP_network(x, network, num_blocks, dep_ratio, dep_th, dep_widt
 
     x_dict = param_array_to_dict(x, param_names)
 
+    hidden_FF_max_weight = x_dict['hidden_FF_max_weight']
+    hidden_FB_max_weight = x_dict['hidden_FB_max_weight']
     output_FF_max_weight = x_dict['output_FF_max_weight']
     output_layer_pos_mod_th = x_dict['output_layer_pos_mod_th']
     output_layer_neg_mod_th = x_dict['output_layer_neg_mod_th']
+    hidden_layer_pos_mod_th = x_dict['hidden_layer_pos_mod_th']
+    hidden_layer_neg_mod_th = x_dict['hidden_layer_neg_mod_th']
     output_layer_pos_mod_learning_rate = x_dict['output_layer_pos_mod_learning_rate']
+    hidden_layer_pos_mod_learning_rate = x_dict['hidden_layer_pos_mod_learning_rate']
     FF_max_init_weight_factor = x_dict['FF_max_init_weight_factor']
-    E_I_soma_max_init_weight = x_dict['E_I_soma_max_init_weight']
+    FB_min_init_weight_factor = x_dict['FB_min_init_weight_factor']
+    FB_max_init_weight_factor = x_dict['FB_max_init_weight_factor']
+    hidden_E_I_soma_max_init_weight = x_dict['hidden_E_I_soma_max_init_weight']
+    output_E_I_soma_max_init_weight = x_dict['output_E_I_soma_max_init_weight']
     I_soma_E_max_init_weight = x_dict['I_soma_E_max_init_weight']
+    E_I_dend_max_init_weight = x_dict['E_I_dend_max_init_weight']
+    I_dend_E_max_init_weight = x_dict['I_dend_E_max_init_weight']
     neg_mod_pre_discount = x_dict['neg_mod_pre_discount']
     
     initial_FF_weight_bounds_dict = {}
@@ -145,9 +153,14 @@ def test_simple_BTSP_network(x, network, num_blocks, dep_ratio, dep_th, dep_widt
         if curr_layer_inh_soma_dim > 0:
             if curr_layer_inh_soma_dim > 1:
                 raise Exception('inh_soma_dim > 1 not yet implemented')
+            elif layer < network.num_layers - 1:
+                initial_I_soma_E_weight_bounds[layer] = (I_soma_E_max_init_weight, I_soma_E_max_init_weight)
+                initial_E_I_soma_weight_bounds[layer] = \
+                    (hidden_E_I_soma_max_init_weight, hidden_E_I_soma_max_init_weight)
             else:
                 initial_I_soma_E_weight_bounds[layer] = (I_soma_E_max_init_weight, I_soma_E_max_init_weight)
-                initial_E_I_soma_weight_bounds[layer] = (E_I_soma_max_init_weight, E_I_soma_max_init_weight)
+                initial_E_I_soma_weight_bounds[layer] = \
+                    (output_E_I_soma_max_init_weight, output_E_I_soma_max_init_weight)
     
     for layer in range(1, network.num_layers - 1):
         curr_layer_dim = network.layer_dims[layer]
