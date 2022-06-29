@@ -26,3 +26,17 @@ B:
   I_I_hidden_weight_scale: 5.040185E+00
   I_I_learning_rate: 2.982688E-01
   I_I_output_weight_scale: 3.343300E-01
+# 21 -> 7[7] -> 21[7] (200 blocks)
+anti_Hebb:
+  E_E_hidden_weight_scale: 3.255803E+00
+  E_E_learning_rate: 2.756839E-01
+  E_E_output_weight_scale: 8.436103E-01
+  E_I_hidden_weight_scale: 2.352644E+00
+  E_I_learning_rate: 1.415294E-02
+  E_I_output_weight_scale: 1.589356E+00
+  I_E_hidden_weight_scale: 1.925080E+00
+  I_E_learning_rate: 3.213503E-01
+  I_E_output_weight_scale: 7.526584E+00
+  I_I_hidden_weight_scale: 1.877143E+00
+  I_I_learning_rate: 4.600147E-02
+  I_I_output_weight_scale: 1.979838E+00

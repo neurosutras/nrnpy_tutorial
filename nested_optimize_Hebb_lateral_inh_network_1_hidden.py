@@ -5,6 +5,7 @@ import h5py
 
 context = Context()
 
+
 def config_worker():
 
     ReLU = lambda x: np.maximum(0., x)
