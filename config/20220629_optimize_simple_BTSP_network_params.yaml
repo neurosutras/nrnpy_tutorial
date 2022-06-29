@@ -1,0 +1,21 @@
+# 21 -> 21[1,1] -> 21[1]
+0:
+  E_I_dend_max_init_weight: -3.415619E-01
+  E_I_soma_max_init_weight: -9.996121E-01
+  FB_max_init_weight_factor: 1.989530E+00
+  FB_min_init_weight_factor: 5.977328E-01
+  FF_max_init_weight_factor: 5.001607E-01
+  I_dend_E_max_init_weight: 1.000000E+00
+  I_soma_E_max_init_weight: 1.000000E+00
+  hidden_FB_max_weight: 4.909890E+00
+  hidden_FF_max_weight: 2.633170E+00
+  hidden_layer_neg_mod_th: -3.943002E-01
+  hidden_layer_pos_mod_learning_rate: 2.929348E-02
+  hidden_layer_pos_mod_th: 2.061089E-01
+  neg_mod_pre_discount: 2.500000E-01
+  output_FF_max_weight: 4.766827E+00
+  output_layer_neg_mod_th: -4.362644E-01
+  output_layer_pos_mod_learning_rate: 1.580927E-01
+  output_layer_pos_mod_th: 1.105789E-01
+# 7 -> 21[1]
+

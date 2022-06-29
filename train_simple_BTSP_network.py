@@ -289,11 +289,16 @@ class BTSP_network(object):
         fig, axes = plt.subplots(2, len(FF_weight_matrix_dict),
                                  figsize=(len(FF_weight_matrix_dict) * 2.5, 2.5 * 2))
         for col, layer in enumerate(sorted(list(FF_weight_matrix_dict.keys()))):
-            cbar = axes[0][col].imshow(FF_weight_matrix_dict[layer], aspect='auto', interpolation='none')
-            fig.colorbar(cbar, ax=axes[0][col])
-            axes[0][col].set_title('FF weights:\nLayer %i' % layer)
-            axes[0][col].set_ylabel('Layer %i units' % layer)
-            axes[0][col].set_xlabel('Layer %i units' % (layer - 1))
+            if len(FF_weight_matrix_dict) == 1:
+                this_axis = axes[0]
+            else:
+                this_axis = axes[0][col]
+                axes[1][-1].axis('off')
+            cbar = this_axis.imshow(FF_weight_matrix_dict[layer], aspect='auto', interpolation='none')
+            fig.colorbar(cbar, ax=this_axis)
+            this_axis.set_title('FF weights:\nLayer %i' % layer)
+            this_axis.set_ylabel('Layer %i units' % layer)
+            this_axis.set_xlabel('Layer %i units' % (layer - 1))
 
             if layer in FB_weight_matrix_dict:
                 cbar = axes[1][col].imshow(FB_weight_matrix_dict[layer], aspect='auto', interpolation='none')
@@ -301,8 +306,6 @@ class BTSP_network(object):
                 axes[1][col].set_title('FB weights:\nLayer %i' % layer)
                 axes[1][col].set_ylabel('Layer %i units' % layer)
                 axes[1][col].set_xlabel('Layer %i units' % (layer + 1))
-
-            axes[1][-1].axis('off')
         fig.tight_layout()
         fig.show()
 
@@ -434,6 +437,8 @@ class BTSP_network(object):
         self.input_pattern_index_history = []
         self.layer_activity_dict_history = []
         self.layer_mod_events_dict_history = []
+        self.block_output_activity_history = []
+        self.accuracy_history = []
 
         num_patterns = self.input_pattern_matrix.shape[-1]
         if shuffle:
@@ -491,6 +496,19 @@ class BTSP_network(object):
                 self.FB_weight_matrix_dict_history.append(deepcopy(FB_weight_matrix_dict))
                 self.E_I_dend_weight_matrix_dict_history.append(deepcopy(E_I_dend_weight_matrix_dict))
 
+            summed_FF_input_dict, summed_FB_input_dict, layer_activity_dict, layer_inh_soma_activity_dict, \
+            layer_inh_dend_activity_dict = \
+                self.get_layer_activities(self.input_pattern_matrix, FF_weight_matrix_dict, FB_weight_matrix_dict,
+                                          I_soma_E_weight_matrix_dict, I_dend_E_weight_matrix_dict,
+                                          E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict)
+            self.block_output_activity_history.append(np.copy(layer_activity_dict[self.num_layers - 1]))
+            target_argmax = np.arange(num_patterns)
+            accuracy = np.count_nonzero(
+                np.argmax(layer_activity_dict[self.num_layers - 1], axis=1) == target_argmax) / num_patterns * 100.
+            self.accuracy_history.append(accuracy)
+
+        self.accuracy_history = np.array(self.accuracy_history)
+
         if plot:
             sorted_indexes = []
             start_index = 0
@@ -517,6 +535,13 @@ class BTSP_network(object):
                 axes[row].set_ylabel('Layer %i units' % layer)
                 # axes[row].set_xlabel('Sorted input patterns')
                 axes[row].set_title('Layer %i modulatory events' % layer)
+            fig.tight_layout()
+            fig.show()
+
+            fig, axis = plt.subplots()
+            axis.plot(range(num_blocks), self.accuracy_history)
+            axis.set_xlabel('Training blocks')
+            axis.set_ylabel('Argmax accuracy')
             fig.tight_layout()
             fig.show()
 

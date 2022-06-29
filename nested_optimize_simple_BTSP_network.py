@@ -30,7 +30,7 @@ def config_worker():
 
     network = BTSP_network(num_hidden_layers=num_hidden_layers, input_dim=input_dim, hidden_dim=hidden_dim,
                            hidden_inh_soma_dim=inh_soma_dim, hidden_inh_dend_dim=inh_dend_dim,
-                           output_dim=input_dim, output_inh_soma_dim=inh_soma_dim, tau=3, num_steps=12,
+                           output_dim=output_dim, output_inh_soma_dim=inh_soma_dim, tau=3, num_steps=12,
                            activation_f=ReLU, seed=seed)
 
     input_peak_rate = 1.
