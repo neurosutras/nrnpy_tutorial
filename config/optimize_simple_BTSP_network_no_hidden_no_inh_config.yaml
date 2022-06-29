@@ -32,7 +32,7 @@ kwargs:
 feature_names:
 - MSE_loss
 get_features_stages:
-- source: nested_optimize_simple_BTSP_network_no_hidden
+- source: nested_optimize_simple_BTSP_network_no_hidden_no_inh
   compute_features: compute_features
 get_objectives:
   nested_optimize_simple_BTSP_network_no_hidden: get_objectives
