@@ -18,7 +18,9 @@ def config_worker():
     seed = 0
     shuffle = True
     disp = True
-    plot = 2
+
+    if 'plot' not in context():
+        plot = False
     
     dep_ratio = 1.
     dep_th = 0.01
