@@ -13,4 +13,16 @@ A:
   I_I_learning_rate: 0.000000E+00
   I_I_output_weight_scale: 0.000000E+00
 # 21 -> 7[7] -> 21[7] (200 blocks)
-
+B:
+  E_E_hidden_weight_scale: 9.927103E+00
+  E_E_learning_rate: 2.339308E-01
+  E_E_output_weight_scale: 5.066363E+00
+  E_I_hidden_weight_scale: 2.128817E+00
+  E_I_learning_rate: 2.023946E-01
+  E_I_output_weight_scale: 9.054215E+00
+  I_E_hidden_weight_scale: 1.597438E+00
+  I_E_learning_rate: 5.947580E-02
+  I_E_output_weight_scale: 7.679770E+00
+  I_I_hidden_weight_scale: 5.040185E+00
+  I_I_learning_rate: 2.982688E-01
+  I_I_output_weight_scale: 3.343300E-01

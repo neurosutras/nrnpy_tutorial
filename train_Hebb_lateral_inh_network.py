@@ -368,8 +368,9 @@ class Hebb_lat_inh_network(object):
         self.layer_output_dict_history = []
         self.layer_inh_output_dict_history = []
 
-        block_output_activity_history = []
-        self.accuracy_history = []
+        self.block_output_activity_history = []
+        self.local_accuracy_history = []
+        self.global_accuracy_history = []
 
         num_patterns = self.input_pattern_matrix.shape[-1]
         if shuffle:
@@ -427,17 +428,24 @@ class Hebb_lat_inh_network(object):
             layer_output_dict, layer_inh_output_dict = \
                 self.get_layer_activities(self.input_pattern_matrix, E_E_weight_matrix_dict, E_I_weight_matrix_dict,
                                           I_E_weight_matrix_dict, I_I_weight_matrix_dict)
-            block_output_activity_history.append(np.copy(layer_output_dict[self.num_layers - 1]))
+            self.block_output_activity_history.append(np.copy(layer_output_dict[self.num_layers - 1]))
 
-        final_output_activity = block_output_activity_history[-1]
-        sorted_row_indexes = get_diag_argmax_row_indexes(final_output_activity)
-        target_argmax = np.arange(len(sorted_row_indexes))
-        for output_activity in block_output_activity_history:
-            accuracy = np.count_nonzero(np.argmax(output_activity[sorted_row_indexes, :], axis=1) == target_argmax) / \
-                       len(sorted_row_indexes) * 100.
-            self.accuracy_history.append(accuracy)
+        final_output_activity = self.block_output_activity_history[-1]
+        final_sorted_row_indexes = get_diag_argmax_row_indexes(final_output_activity)
+        target_argmax = np.arange(num_patterns)
+        for output_activity in self.block_output_activity_history:
+            global_accuracy = np.count_nonzero(
+                np.argmax(output_activity[final_sorted_row_indexes, :], axis=1) == target_argmax) / \
+                              num_patterns * 100.
+            self.global_accuracy_history.append(global_accuracy)
+            local_sorted_row_indexes = get_diag_argmax_row_indexes(output_activity)
+            local_accuracy = np.count_nonzero(
+                np.argmax(output_activity[local_sorted_row_indexes, :], axis=1) == target_argmax) / \
+                              num_patterns * 100.
+            self.local_accuracy_history.append(local_accuracy)
 
-        self.accuracy_history = np.array(self.accuracy_history)
+        self.local_accuracy_history = np.array(self.local_accuracy_history)
+        self.global_accuracy_history = np.array(self.global_accuracy_history)
 
         if plot:
             sorted_indexes = []
@@ -469,9 +477,11 @@ class Hebb_lat_inh_network(object):
             fig.show()
 
             fig, axis = plt.subplots()
-            axis.plot(range(num_blocks), self.accuracy_history)
+            axis.plot(range(num_blocks), self.global_accuracy_history, label='Global')
+            axis.plot(range(num_blocks), self.local_accuracy_history, label='Local')
             axis.set_xlabel('Training blocks')
             axis.set_ylabel('Argmax accuracy')
+            axis.legend(loc='best', frameon=False)
             fig.tight_layout()
             fig.show()
 
@@ -503,7 +513,7 @@ def main():
     hidden_dim = 7
     hidden_inh_dim = 7
     output_dim = 21
-    output_inh_dim = 7
+    output_inh_dim = 1  #7
     tau = 3
     num_steps = 12
     seed = 0
@@ -511,10 +521,10 @@ def main():
     shuffle = True
     plot = 2
     n_hot = 2
-    I_floor_weight = -0.05
-    anti_Hebb_I = True
+    I_floor_weight = 0.  #  -0.05
+    anti_Hebb_I = False
 
-    num_blocks = 100  # each block contains all input patterns
+    num_blocks = 200  # each block contains all input patterns
 
     E_E_learning_rate = 0.05
     E_I_learning_rate = 0.05
@@ -610,13 +620,18 @@ def main():
     for layer in range(1, network.num_layers):
         E_E_learning_rule_dict[layer] = 'Hebb + weight norm'
         if network.inh_layer_dims[layer] > 0:
-            I_E_learning_rule_dict[layer] = 'Hebb + weight norm'
-            if anti_Hebb_I:
-                E_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
-                I_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
+            if network.inh_layer_dims[layer] > 1:
+                I_E_learning_rule_dict[layer] = 'Hebb + weight norm'
+                if anti_Hebb_I:
+                    E_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
+                    I_I_learning_rule_dict[layer] = 'Anti-Hebb + weight norm'
+                else:
+                    E_I_learning_rule_dict[layer] = 'Hebb + weight norm'
+                    I_I_learning_rule_dict[layer] = 'Hebb + weight norm'
             else:
-                E_I_learning_rule_dict[layer] = 'Hebb + weight norm'
-                I_I_learning_rule_dict[layer] = 'Hebb + weight norm'
+                I_E_learning_rule_dict[layer] = None
+                E_I_learning_rule_dict[layer] = None
+                I_I_learning_rule_dict[layer] = None
 
     network.config_learning_rules(E_E_learning_rule_dict, E_I_learning_rule_dict, I_E_learning_rule_dict,
                                   I_I_learning_rule_dict, E_E_learning_rate_dict, E_I_learning_rate_dict,

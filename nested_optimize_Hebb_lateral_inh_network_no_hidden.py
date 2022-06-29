@@ -37,7 +37,7 @@ def config_worker():
     if 'plot' not in context():
         plot = False
     if 'num_blocks' not in context():
-        num_blocks = 100  # each block contains all input patterns
+        num_blocks = 200  # each block contains all input patterns
     else:
         num_blocks = int(context.num_blocks)
 
