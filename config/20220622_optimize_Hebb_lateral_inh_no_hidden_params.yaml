@@ -18,3 +18,13 @@ B:
   I_E_weight_scale: 8.361437E+00
   I_I_learning_rate: 4.152069E-02
   I_I_weight_scale: 1.013417E-01
+# 7 -> 21[7] (200 blocks)
+anti_Hebb:
+  E_E_learning_rate: 6.539171E-01
+  E_E_weight_scale: 2.948921E+00
+  E_I_learning_rate: 6.768676E-03
+  E_I_weight_scale: 6.622212E+00
+  I_E_learning_rate: 2.081628E-02
+  I_E_weight_scale: 7.337564E+00
+  I_I_learning_rate: 2.810924E-04
+  I_I_weight_scale: 1.000349E-01

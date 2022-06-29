@@ -163,22 +163,6 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, I_floor_weight, anti_H
     I_E_weight_scale = x_dict['I_E_weight_scale']
     I_I_weight_scale = x_dict['I_I_weight_scale']
 
-    E_E_weight_scale_dict = {}
-    E_I_weight_scale_dict = {}
-    I_E_weight_scale_dict = {}
-    I_I_weight_scale_dict = {}
-
-    for layer in range(1, network.num_layers):
-        E_E_weight_scale_dict[layer] = E_E_weight_scale
-        if network.inh_layer_dims[layer] > 0:
-            E_I_weight_scale_dict[layer] = E_I_weight_scale
-            I_E_weight_scale_dict[layer] = I_E_weight_scale
-            I_I_weight_scale_dict[layer] = I_I_weight_scale
-
-    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
-                         E_I_weight_bounds_dict=(None, I_floor_weight),
-                         I_I_weight_bounds_dict=(None, I_floor_weight))
-
     E_E_learning_rate_dict = {}
     E_I_learning_rate_dict = {}
     I_E_learning_rate_dict = {}
@@ -215,6 +199,22 @@ def test_Hebb_lateral_inh_network(x, network, num_blocks, I_floor_weight, anti_H
     network.config_learning_rules(E_E_learning_rule_dict, E_I_learning_rule_dict, I_E_learning_rule_dict,
                                   I_I_learning_rule_dict, E_E_learning_rate_dict, E_I_learning_rate_dict,
                                   I_E_learning_rate_dict, I_I_learning_rate_dict)
+
+    E_E_weight_scale_dict = {}
+    E_I_weight_scale_dict = {}
+    I_E_weight_scale_dict = {}
+    I_I_weight_scale_dict = {}
+
+    for layer in range(1, network.num_layers):
+        E_E_weight_scale_dict[layer] = E_E_weight_scale
+        if network.inh_layer_dims[layer] > 0:
+            E_I_weight_scale_dict[layer] = E_I_weight_scale
+            I_E_weight_scale_dict[layer] = I_E_weight_scale
+            I_I_weight_scale_dict[layer] = I_I_weight_scale
+
+    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
+                         E_I_weight_bounds_dict=(None, I_floor_weight),
+                         I_I_weight_bounds_dict=(None, I_floor_weight))
 
     if disp:
         print('x: %s' % str(list(x)))

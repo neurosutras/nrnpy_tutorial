@@ -1,11 +1,10 @@
 import sys
-import itertools
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
 from copy import deepcopy
 from nested.optimize_utils import Context
 from train_network_utils import *
+
 
 context = Context()
 
@@ -578,28 +577,6 @@ def main():
     output_I_E_weight_scale = 5.
     output_I_I_weight_scale = 5.
 
-    E_E_weight_scale_dict = {}
-    E_I_weight_scale_dict = {}
-    I_E_weight_scale_dict = {}
-    I_I_weight_scale_dict = {}
-
-    for layer in range(1, network.num_layers):
-        if layer < network.num_layers - 1:
-            E_E_weight_scale_dict[layer] = hidden_E_E_weight_scale
-            if network.inh_layer_dims[layer] > 0:
-                E_I_weight_scale_dict[layer] = hidden_E_I_weight_scale
-                I_E_weight_scale_dict[layer] = hidden_I_E_weight_scale
-                I_I_weight_scale_dict[layer] = hidden_I_I_weight_scale
-        else:
-            E_E_weight_scale_dict[layer] = output_E_E_weight_scale
-            if network.inh_layer_dims[layer] > 0:
-                E_I_weight_scale_dict[layer] = output_E_I_weight_scale
-                I_E_weight_scale_dict[layer] = output_I_E_weight_scale
-                I_I_weight_scale_dict[layer] = output_I_I_weight_scale
-
-    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
-                         E_I_weight_bounds_dict=(None, I_floor_weight), I_I_weight_bounds_dict=(None, I_floor_weight))
-
     E_E_learning_rate_dict = {}
     E_I_learning_rate_dict = {}
     I_E_learning_rate_dict = {}
@@ -636,6 +613,28 @@ def main():
     network.config_learning_rules(E_E_learning_rule_dict, E_I_learning_rule_dict, I_E_learning_rule_dict,
                                   I_I_learning_rule_dict, E_E_learning_rate_dict, E_I_learning_rate_dict,
                                   I_E_learning_rate_dict, I_I_learning_rate_dict)
+
+    E_E_weight_scale_dict = {}
+    E_I_weight_scale_dict = {}
+    I_E_weight_scale_dict = {}
+    I_I_weight_scale_dict = {}
+
+    for layer in range(1, network.num_layers):
+        if layer < network.num_layers - 1:
+            E_E_weight_scale_dict[layer] = hidden_E_E_weight_scale
+            if network.inh_layer_dims[layer] > 0:
+                E_I_weight_scale_dict[layer] = hidden_E_I_weight_scale
+                I_E_weight_scale_dict[layer] = hidden_I_E_weight_scale
+                I_I_weight_scale_dict[layer] = hidden_I_I_weight_scale
+        else:
+            E_E_weight_scale_dict[layer] = output_E_E_weight_scale
+            if network.inh_layer_dims[layer] > 0:
+                E_I_weight_scale_dict[layer] = output_E_I_weight_scale
+                I_E_weight_scale_dict[layer] = output_I_E_weight_scale
+                I_I_weight_scale_dict[layer] = output_I_I_weight_scale
+
+    network.init_weights(E_E_weight_scale_dict, E_I_weight_scale_dict, I_E_weight_scale_dict, I_I_weight_scale_dict,
+                         E_I_weight_bounds_dict=(None, I_floor_weight), I_I_weight_bounds_dict=(None, I_floor_weight))
 
     layer_output_dict, layer_inh_output_dict = \
         network.get_layer_activities(network.input_pattern_matrix, network.initial_E_E_weight_matrix_dict,
