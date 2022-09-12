@@ -54,6 +54,14 @@ def get_neg_mod_delta_w(learning_rate):
     return np.vectorize(lambda pre: -learning_rate * np.maximum(0., np.minimum(pre, 1.)))
 
 
+def get_Hebb_rule(learning_rate, direction=1):
+    return lambda pre, post: direction * learning_rate * np.outer(post, pre)
+
+
+def get_anti_Hebb_rule(learning_rate, direction=1):
+    return lambda pre, post: -direction * learning_rate * np.outer(post, pre)
+
+
 class BTSP_network(object):
 
     def __init__(self, num_hidden_layers, input_dim, hidden_dim, hidden_inh_soma_dim, hidden_inh_dend_dim, output_dim,
@@ -104,17 +112,21 @@ class BTSP_network(object):
             self.inh_soma_layer_dims = [0, self.output_inh_soma_dim]
             self.inh_dend_layer_dims = [0, 0]
 
-    def init_weights(self, FF_weight_bounds_dict, FB_weight_bounds_dict, initial_FF_weight_bounds_dict,
-                     initial_FB_weight_bounds_dict, initial_I_soma_E_weight_bounds, initial_I_dend_E_weight_bounds,
-                     initial_E_I_dend_weight_bounds, initial_E_I_soma_weight_bounds):
+    def init_weights(self, FF_weight_bounds_dict, FB_weight_bounds_dict, E_I_soma_weight_bounds, I_soma_E_weight_bounds,
+                     initial_FF_weight_bounds_dict, initial_FB_weight_bounds_dict, initial_I_soma_E_weight_bounds,
+                     initial_I_dend_E_weight_bounds, initial_E_I_dend_weight_bounds, initial_E_I_soma_weight_bounds,
+                     initial_E_bias_bounds):
         self.FF_weight_bounds_dict = FF_weight_bounds_dict
         self.FB_weight_bounds_dict = FB_weight_bounds_dict
+        self.E_I_soma_weight_bounds = E_I_soma_weight_bounds
+        self.I_soma_E_weight_bounds = I_soma_E_weight_bounds
         self.initial_FF_weight_bounds_dict = initial_FF_weight_bounds_dict
         self.initial_FB_weight_bounds_dict = initial_FB_weight_bounds_dict
         self.initial_I_soma_E_weight_bounds = initial_I_soma_E_weight_bounds
         self.initial_I_dend_E_weight_bounds = initial_I_dend_E_weight_bounds
         self.initial_E_I_dend_weight_bounds = initial_E_I_dend_weight_bounds
         self.initial_E_I_soma_weight_bounds = initial_E_I_soma_weight_bounds
+        self.initial_E_bias_bounds = initial_E_bias_bounds
         self.re_init_weights()
 
     def re_init_weights(self, seed=None):
@@ -127,6 +139,7 @@ class BTSP_network(object):
         self.initial_I_dend_E_weight_matrix_dict = {}
         self.initial_E_I_soma_weight_matrix_dict = {}
         self.initial_E_I_dend_weight_matrix_dict = {}
+        self.initial_E_bias_array_dict = {}
 
         for layer in range(1, self.num_layers):
             curr_layer_dim = self.layer_dims[layer]
@@ -135,6 +148,7 @@ class BTSP_network(object):
                 self.random.uniform(self.initial_FF_weight_bounds_dict[layer][0],
                                     self.initial_FF_weight_bounds_dict[layer][1],
                                     [curr_layer_dim, prev_layer_dim])
+            self.initial_E_bias_array_dict[layer] = np.ones([curr_layer_dim]) * self.initial_E_bias_bounds[layer][0]
             curr_layer_inh_soma_dim = self.inh_soma_layer_dims[layer]
             if curr_layer_inh_soma_dim > 0:
                 if curr_layer_inh_soma_dim > 1:
@@ -214,10 +228,32 @@ class BTSP_network(object):
         for layer in pos_mod_learning_rate_dict:
             self.pos_mod_rule_dict[layer] = \
                 get_BTSP_delta_w(pos_mod_learning_rate_dict[layer], dep_ratio, dep_th, dep_width)
-            
+
+    def config_bias_learning_rule(self, E_bias_learning_rate_dict):
+        self.E_bias_learning_rate_dict = E_bias_learning_rate_dict
+
+    def config_E_I_soma_learning_rule(self, E_I_soma_learning_rate_dict):
+        self.E_I_soma_learning_rate_dict = E_I_soma_learning_rate_dict
+
+    def config_I_soma_E_learning_rule(self, I_soma_E_learning_rate_dict, I_soma_E_learning_rule_dict,
+                                      I_soma_E_weight_scale_dict):
+        self.I_soma_E_learning_rate_dict = I_soma_E_learning_rate_dict
+        self.I_soma_E_weight_scale_dict = I_soma_E_weight_scale_dict
+        self.I_soma_E_weight_norm_dict = {}
+        self.I_soma_E_learning_rule_dict = {}
+        for layer in I_soma_E_learning_rate_dict:
+            if I_soma_E_learning_rule_dict[layer] == 'Hebb + weight norm':
+                self.I_soma_E_learning_rule_dict[layer] = \
+                    get_Hebb_rule(I_soma_E_learning_rate_dict[layer], direction=1)
+                self.I_soma_E_weight_norm_dict[layer] = True
+            elif I_soma_E_learning_rule_dict[layer] == 'Anti-Hebb + weight norm':
+                self.I_soma_E_learning_rule_dict[layer] = \
+                    get_anti_Hebb_rule(I_soma_E_learning_rate_dict[layer], direction=1)
+                self.I_soma_E_weight_norm_dict[layer] = True
+
     def get_layer_activities(self, input_pattern_matrix, FF_weight_matrix_dict, FB_weight_matrix_dict, 
                              I_soma_E_weight_matrix_dict, I_dend_E_weight_matrix_dict, E_I_soma_weight_matrix_dict,
-                             E_I_dend_weight_matrix_dict):
+                             E_I_dend_weight_matrix_dict, E_bias_array_dict):
         
         summed_FF_input_dict = {}
         summed_FB_input_dict = {}
@@ -247,6 +283,7 @@ class BTSP_network(object):
             for layer in sorted_layers:
                 prev_layer_activity = layer_activity_dict[layer - 1]
                 delta_curr_layer_input = FF_weight_matrix_dict[layer].dot(prev_layer_activity)
+                delta_curr_layer_input += E_bias_array_dict[layer][:,np.newaxis]
                 if self.inh_soma_layer_dims[layer] > 0:
                     delta_curr_layer_input += \
                         E_I_soma_weight_matrix_dict[layer].dot(past_layer_inh_soma_activity_dict[layer])
@@ -339,7 +376,7 @@ class BTSP_network(object):
             axes[1][0].axis('off')
             axes[2][0].axis('off')
             axes[1][-1].axis('off')
-            axes[2][-1].axis('off')
+            # axes[2][-1].axis('off')
         fig.tight_layout()
         fig.show()
 
@@ -430,10 +467,14 @@ class BTSP_network(object):
         I_dend_E_weight_matrix_dict = deepcopy(self.initial_I_dend_E_weight_matrix_dict)
         E_I_soma_weight_matrix_dict = deepcopy(self.initial_E_I_soma_weight_matrix_dict)
         E_I_dend_weight_matrix_dict = deepcopy(self.initial_E_I_dend_weight_matrix_dict)
+        E_bias_array_dict = deepcopy(self.initial_E_bias_array_dict)
 
         self.FF_weight_matrix_dict_history = []
         self.FB_weight_matrix_dict_history = []
+        self.E_I_soma_weight_matrix_dict_history = []
+        self.I_soma_E_weight_matrix_dict_history = []
         self.E_I_dend_weight_matrix_dict_history = []
+        self.E_bias_array_dict_history = []
         self.input_pattern_index_history = []
         self.layer_activity_dict_history = []
         self.layer_mod_events_dict_history = []
@@ -456,7 +497,8 @@ class BTSP_network(object):
                 layer_inh_dend_activity_dict = \
                     self.get_layer_activities(input_pattern, FF_weight_matrix_dict, FB_weight_matrix_dict,
                                               I_soma_E_weight_matrix_dict, I_dend_E_weight_matrix_dict,
-                                              E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict)
+                                              E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict,
+                                              E_bias_array_dict)
                 layer_mod_events_dict, layer_activity_dict, layer_inh_dend_activity_dict = \
                     self.get_layer_mod_events(FB_weight_matrix_dict, layer_activity_dict, I_dend_E_weight_matrix_dict,
                                               E_I_dend_weight_matrix_dict, target_output)
@@ -474,6 +516,33 @@ class BTSP_network(object):
                     FF_weight_matrix_dict[layer] = FF_weight_matrix
                     delta_FF_weight_matrix = FF_weight_matrix - prev_FF_weight_matrix
                     delta_FF_weight_matrix_dict[layer] = delta_FF_weight_matrix
+
+                    delta_E_bias_array = self.E_bias_learning_rate_dict[layer] * layer_mod_events_dict[layer]
+                    E_bias_array_dict[layer] += delta_E_bias_array
+
+                    delta_E_I_soma_weight_matrix = self.E_I_soma_learning_rate_dict[layer] * \
+                                                   np.outer(layer_mod_events_dict[layer],
+                                                            layer_inh_soma_activity_dict[layer])
+                    prev_E_I_soma_weight_matrix = E_I_soma_weight_matrix_dict[layer]
+                    E_I_soma_weight_matrix_dict[layer] = np.minimum(self.E_I_soma_weight_bounds[layer][1],
+                                                                    np.maximum(
+                                                                        self.E_I_soma_weight_bounds[layer][0],
+                                                                        prev_E_I_soma_weight_matrix +
+                                                                        delta_E_I_soma_weight_matrix))
+
+                    delta_I_soma_E_weight_matrix = \
+                        self.I_soma_E_learning_rule_dict[layer](layer_activity_dict[layer],
+                                                                layer_inh_soma_activity_dict[layer])
+                    prev_I_soma_E_weight_matrix = I_soma_E_weight_matrix_dict[layer]
+                    I_soma_E_weight_matrix_dict[layer] = np.minimum(self.I_soma_E_weight_bounds[layer][1],
+                                                                    np.maximum(
+                                                                        self.I_soma_E_weight_bounds[layer][0],
+                                                                        prev_I_soma_E_weight_matrix +
+                                                                        delta_I_soma_E_weight_matrix))
+                    if self.I_soma_E_weight_norm_dict[layer]:
+                        I_soma_E_weight_matrix_dict[layer] = \
+                            self.I_soma_E_weight_scale_dict[layer] * I_soma_E_weight_matrix_dict[layer] / \
+                                         np.sum(np.abs(I_soma_E_weight_matrix_dict[layer]), axis=1)[:, np.newaxis]
 
                 for layer in delta_FB_weight_matrix_dict:
                     prev_FB_weight_matrix = FB_weight_matrix_dict[layer]
@@ -494,15 +563,18 @@ class BTSP_network(object):
                 
                 self.FF_weight_matrix_dict_history.append(deepcopy(FF_weight_matrix_dict))
                 self.FB_weight_matrix_dict_history.append(deepcopy(FB_weight_matrix_dict))
+                self.E_I_soma_weight_matrix_dict_history.append(deepcopy(E_I_soma_weight_matrix_dict))
+                self.I_soma_E_weight_matrix_dict_history.append(deepcopy(I_soma_E_weight_matrix_dict))
                 self.E_I_dend_weight_matrix_dict_history.append(deepcopy(E_I_dend_weight_matrix_dict))
+                self.E_bias_array_dict_history.append(deepcopy(E_bias_array_dict))
 
             summed_FF_input_dict, summed_FB_input_dict, layer_activity_dict, layer_inh_soma_activity_dict, \
             layer_inh_dend_activity_dict = \
                 self.get_layer_activities(self.input_pattern_matrix, FF_weight_matrix_dict, FB_weight_matrix_dict,
                                           I_soma_E_weight_matrix_dict, I_dend_E_weight_matrix_dict,
-                                          E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict)
+                                          E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict, E_bias_array_dict)
             self.block_output_activity_history.append(np.copy(layer_activity_dict[self.num_layers - 1]))
-            target_argmax = np.arange(num_patterns)
+            target_argmax = np.argmax(self.target_output_pattern_matrix, axis=0)
             accuracy = np.count_nonzero(
                 np.argmax(layer_activity_dict[self.num_layers - 1], axis=0) == target_argmax) / num_patterns * 100.
             self.accuracy_history.append(accuracy)
@@ -547,15 +619,16 @@ class BTSP_network(object):
 
         return self.get_MSE_loss(self.FF_weight_matrix_dict_history[-1], self.FB_weight_matrix_dict_history[-1],
                                  I_soma_E_weight_matrix_dict, I_dend_E_weight_matrix_dict, E_I_soma_weight_matrix_dict,
-                                 self.E_I_dend_weight_matrix_dict_history[-1], disp)
+                                 self.E_I_dend_weight_matrix_dict_history[-1], self.E_bias_array_dict_history[-1], disp)
 
     def get_MSE_loss(self, FF_weight_matrix_dict, FB_weight_matrix_dict, I_soma_E_weight_matrix_dict,
-                     I_dend_E_weight_matrix_dict, E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict, disp=False):
+                     I_dend_E_weight_matrix_dict, E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict,
+                     E_bias_array_dict, disp=False):
         summed_FF_input_dict, summed_FB_input_dict, layer_activity_dict, layer_inh_soma_activity_dict, \
         layer_inh_dend_activity_dict = \
             self.get_layer_activities(self.input_pattern_matrix, FF_weight_matrix_dict, FB_weight_matrix_dict,
                                       I_soma_E_weight_matrix_dict, I_dend_E_weight_matrix_dict,
-                                      E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict)
+                                      E_I_soma_weight_matrix_dict, E_I_dend_weight_matrix_dict, E_bias_array_dict)
         loss = np.mean((self.target_output_pattern_matrix - layer_activity_dict[self.num_layers - 1])**2.)
         if disp:
             print('Loss: %.4E, Argmax: %s' % (loss, np.argmax(layer_activity_dict[self.num_layers - 1], axis=0)))
@@ -567,32 +640,40 @@ def main():
 
     ReLU = lambda x: np.maximum(0., x)
 
-    n_hot = 1
-    input_dim = 21
-    num_hidden_layers = 1
+    input_dim = 2
+    num_hidden_layers = 0
     hidden_dim = 21  # 7
-    output_dim = 21
+    output_dim = 2
     inh_soma_dim = 1
-    inh_dend_dim = 1
+    inh_dend_dim = 0
     seed = 0
-    shuffle = False
+    shuffle = True
     disp = True
     plot = 2
     max_weight = 2.
+    min_inh_weight = -5.
     w_E_I_dend = -0.001
     w_E_I_soma = -0.2
     w_I_soma_E = 1.
     w_I_dend_E = 1.
+    w_I_soma_E_scale = 2.
+    w_I_soma_E_floor = 0.01
+    I_soma_E_learning_rule = 'Anti-Hebb + weight norm'
 
-    num_blocks = 100  # each block contains all input patterns
+    num_blocks = 300  # each block contains all input patterns
 
     output_layer_pos_mod_th = 0.25
     output_layer_neg_mod_th = -0.125
     hidden_layer_pos_mod_th = 0.125
     hidden_layer_neg_mod_th = -0.125
 
-    output_layer_pos_mod_learning_rate = 0.025
-    hidden_layer_pos_mod_learning_rate = 0.025
+    output_layer_pos_mod_learning_rate = 0.25
+    hidden_layer_pos_mod_learning_rate = 0.25
+
+    E_bias_learning_rate = 0.25
+    E_I_soma_learning_rate = 0.25
+    I_soma_E_learning_rate = 0.25
+
     neg_mod_pre_discount = 0.25
     dep_ratio = 1.
     dep_th = 0.01
@@ -600,20 +681,16 @@ def main():
 
     network = BTSP_network(num_hidden_layers=num_hidden_layers, input_dim=input_dim, hidden_dim=hidden_dim,
                            hidden_inh_soma_dim=inh_soma_dim, hidden_inh_dend_dim=inh_dend_dim,
-                           output_dim=input_dim, output_inh_soma_dim=inh_soma_dim, tau=3, num_steps=12,
+                           output_dim=input_dim, output_inh_soma_dim=inh_soma_dim, tau=3, num_steps=10,
                            activation_f=ReLU, seed=seed)
 
     input_peak_rate = 1.
-    input_pattern_matrix = get_n_hot_patterns(n_hot, input_dim).T * input_peak_rate
-    unit_peak_col_indexes = np.argmax(input_pattern_matrix, axis=1)
-    sorted_row_indexes = np.argsort(unit_peak_col_indexes)
-    input_pattern_matrix = input_pattern_matrix[sorted_row_indexes, :]
+    input_pattern_matrix = np.array([[0., 0., 1., 1.],
+                                     [0., 1., 0., 1.]])
     num_patterns = input_pattern_matrix.shape[1]
 
-    target_output_pattern_matrix = np.zeros([output_dim, num_patterns])
-    output_indexes = np.arange(0, num_patterns)
-    for i in output_indexes:
-        target_output_pattern_matrix[i, i] = input_peak_rate
+    target_output_pattern_matrix = np.array([[0., 1., 1., 0.],
+                                             [0., 0., 0., 1.]])
 
     network.load_input_patterns(input_pattern_matrix)
     network.load_target_output_patterns(target_output_pattern_matrix)
@@ -640,10 +717,14 @@ def main():
     initial_FB_weight_bounds_dict = {}
     FF_weight_bounds_dict = {}
     FB_weight_bounds_dict = {}
+    E_I_soma_weight_bounds = {}
+    I_soma_E_weight_bounds = {}
+
     initial_E_I_dend_weight_bounds = {}
     initial_E_I_soma_weight_bounds = {}
     initial_I_soma_E_weight_bounds = {}
     initial_I_dend_E_weight_bounds = {}
+    initial_E_bias_bounds = {}
 
     for layer in range(1, network.num_layers):
         curr_layer_dim = network.layer_dims[layer]
@@ -656,7 +737,9 @@ def main():
             raise Exception('inh_soma_dim > 1 not yet implemented')
         if curr_layer_inh_soma_dim > 0:
             initial_I_soma_E_weight_bounds[layer] = (w_I_soma_E, w_I_soma_E)
-            initial_E_I_soma_weight_bounds[layer] = (w_E_I_soma, w_E_I_soma)
+            initial_E_I_soma_weight_bounds[layer] = (w_E_I_soma, 0.)
+            E_I_soma_weight_bounds[layer] = (min_inh_weight, 0.)
+            I_soma_E_weight_bounds[layer] = (w_I_soma_E_floor, w_I_soma_E_scale)
 
     for layer in range(1, network.num_layers - 1):
         curr_layer_dim = network.layer_dims[layer]
@@ -673,9 +756,15 @@ def main():
             initial_E_I_dend_weight_bounds[layer] = (w_E_I_dend, w_E_I_dend)
             initial_I_dend_E_weight_bounds[layer] = (w_I_dend_E, w_I_dend_E)
 
-    network.init_weights(FF_weight_bounds_dict, FB_weight_bounds_dict, initial_FF_weight_bounds_dict,
-                         initial_FB_weight_bounds_dict, initial_I_soma_E_weight_bounds, initial_I_dend_E_weight_bounds,
-                         initial_E_I_dend_weight_bounds, initial_E_I_soma_weight_bounds)
+    for layer in range(1, network.num_layers):
+        initial_E_bias_bounds[layer] = (0., 0.)
+
+    network.init_weights(FF_weight_bounds_dict, FB_weight_bounds_dict, E_I_soma_weight_bounds, I_soma_E_weight_bounds,
+                         initial_FF_weight_bounds_dict, initial_FB_weight_bounds_dict, initial_I_soma_E_weight_bounds,
+                         initial_I_dend_E_weight_bounds, initial_E_I_dend_weight_bounds, initial_E_I_soma_weight_bounds,
+                         initial_E_bias_bounds)
+
+    # network.initial_I_soma_E_weight_matrix_dict[1] = np.array([[0., 1.]])
 
     if plot > 1:
         fig, axes = plt.subplots(network.num_layers - 1, 3, figsize=(9, 3 * (network.num_layers - 1)))
@@ -732,6 +821,26 @@ def main():
     network.config_BTSP_rule(pos_mod_learning_rate_dict, pos_mod_th_dict, neg_mod_th_dict,
                              dep_ratio, dep_th, dep_width, neg_mod_pre_discount)
 
+    E_bias_learning_rate_dict = {}
+    for layer in range(1, network.num_layers):
+        E_bias_learning_rate_dict[layer] = E_bias_learning_rate
+    network.config_bias_learning_rule(E_bias_learning_rate_dict)
+
+    E_I_soma_learning_rate_dict = {}
+    for layer in range(1, network.num_layers):
+        E_I_soma_learning_rate_dict[layer] = E_I_soma_learning_rate
+    network.config_E_I_soma_learning_rule(E_I_soma_learning_rate_dict)
+
+    I_soma_E_learning_rate_dict = {}
+    I_soma_E_learning_rule_dict = {}
+    I_soma_E_weight_scale_dict = {}
+    for layer in range(1, network.num_layers):
+        I_soma_E_learning_rate_dict[layer] = I_soma_E_learning_rate
+        I_soma_E_learning_rule_dict[layer] = I_soma_E_learning_rule
+        I_soma_E_weight_scale_dict[layer] = w_I_soma_E_scale
+    network.config_I_soma_E_learning_rule(I_soma_E_learning_rate_dict, I_soma_E_learning_rule_dict,
+                                          I_soma_E_weight_scale_dict)
+
     if plot > 1:
         BTSP_delta_w = network.pos_mod_rule_dict[network.num_layers - 1]
         pre = np.linspace(0., 2. * input_peak_rate, 100)
@@ -753,18 +862,16 @@ def main():
                                      network.initial_FB_weight_matrix_dict, network.initial_I_soma_E_weight_matrix_dict,
                                      network.initial_I_dend_E_weight_matrix_dict,
                                      network.initial_E_I_soma_weight_matrix_dict,
-                                     network.initial_E_I_dend_weight_matrix_dict)
+                                     network.initial_E_I_dend_weight_matrix_dict, network.initial_E_bias_array_dict)
 
     if plot > 0:
         network.plot_network_state_summary(network.initial_FF_weight_matrix_dict, network.initial_FB_weight_matrix_dict,
                                            summed_FF_input_dict, summed_FB_input_dict, layer_activity_dict,
                                            layer_inh_soma_activity_dict)
 
-    """
     context.update(locals())
-    plt.show()
-    return
-    """
+    #plt.show()
+    #return
 
     loss = network.train(num_blocks, shuffle=shuffle, disp=disp, plot=plot>0)
 
@@ -772,10 +879,11 @@ def main():
     layer_inh_dend_activity_dict = \
             network.get_layer_activities(network.input_pattern_matrix, network.FF_weight_matrix_dict_history[-1],
                                          network.FB_weight_matrix_dict_history[-1],
-                                         network.initial_I_soma_E_weight_matrix_dict,
+                                         network.I_soma_E_weight_matrix_dict_history[-1],
                                          network.initial_I_dend_E_weight_matrix_dict,
-                                         network.initial_E_I_soma_weight_matrix_dict,
-                                         network.E_I_dend_weight_matrix_dict_history[-1])
+                                         network.E_I_soma_weight_matrix_dict_history[-1],
+                                         network.E_I_dend_weight_matrix_dict_history[-1],
+                                         network.E_bias_array_dict_history[-1])
     if plot > 0:
         network.plot_network_state_summary(network.FF_weight_matrix_dict_history[-1],
                                            network.FB_weight_matrix_dict_history[-1], summed_FF_input_dict,

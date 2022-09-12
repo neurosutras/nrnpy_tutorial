@@ -434,12 +434,12 @@ class Hebb_lat_inh_network(object):
         target_argmax = np.arange(num_patterns)
         for output_activity in self.block_output_activity_history:
             global_accuracy = np.count_nonzero(
-                np.argmax(output_activity[final_sorted_row_indexes, :], axis=1) == target_argmax) / \
+                np.argmax(output_activity[final_sorted_row_indexes, :], axis=0) == target_argmax) / \
                               num_patterns * 100.
             self.global_accuracy_history.append(global_accuracy)
             local_sorted_row_indexes = get_diag_argmax_row_indexes(output_activity)
             local_accuracy = np.count_nonzero(
-                np.argmax(output_activity[local_sorted_row_indexes, :], axis=1) == target_argmax) / \
+                np.argmax(output_activity[local_sorted_row_indexes, :], axis=0) == target_argmax) / \
                               num_patterns * 100.
             self.local_accuracy_history.append(local_accuracy)
 
@@ -498,7 +498,7 @@ class Hebb_lat_inh_network(object):
         sorted_row_indexes = get_diag_argmax_row_indexes(final_output)
         loss = np.mean((self.target_output_pattern_matrix - final_output[sorted_row_indexes, :])**2.)
         if disp:
-            print('Loss: %.4E, Argmax: %s' % (loss, np.argmax(final_output[sorted_row_indexes], axis=1)))
+            print('Loss: %.4E, Argmax: %s' % (loss, np.argmax(final_output[sorted_row_indexes], axis=0)))
             sys.stdout.flush()
         return loss
 
