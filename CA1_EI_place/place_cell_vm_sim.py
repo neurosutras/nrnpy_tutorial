@@ -228,3 +228,4 @@ for pop in input_freq:
     input_rate[pop] = get_spatial_osc_population_rate(t, input_freq[pop], osc_depth[pop], t_peak_locs[pop],
                                                       global_t_offset, t_field_width[pop], spatial_depth[pop],
                                                       compression[pop], peak_rate[pop])
+
